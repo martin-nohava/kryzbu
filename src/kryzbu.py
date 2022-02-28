@@ -17,10 +17,11 @@ args = parser.parse_args()
 if args.upload:
     """Upload file to a server."""
     for file in args.upload:
-        client.Client.send_file(file)
+        client.Client.upload(file)
 elif args.download:
     """Download file from server."""
-    print("Download not implemented yet!!!")
+    for file in args.download:
+        client.Client.download(file)
 elif args.list:
     print("Listing is not implemented yet!!!")
 else:
