@@ -3,6 +3,9 @@
 import socket
 import os
 import tqdm
+import os.path
+import time
+
 
 class Server:
     """Implementation of a Kryzbu server (Cryptographically Secure Storage)."""
@@ -11,6 +14,13 @@ class Server:
     PORT = 60606
     BUFFER_SIZE = 4096
     SERVER_FOLDER = os.getenv('APPDATA') + '\\KryzbuServer\\' # Where to save
+    if os.path.exists('C:\\Users\\micha\\AppData\\Roaming' +'\\KryzbuServer\\') == False:
+        os.mkdir('C:\\Users\\micha\\AppData\\Roaming' +'\\KryzbuServer\\')
+
+
+
+
+
     SEPARATOR = " " #TODO: je to na dvo mistech
 
     @staticmethod
@@ -22,6 +32,7 @@ class Server:
         received = client_socket.recv(Server.BUFFER_SIZE).decode()
         filename, filesize = received.split(Server.SEPARATOR)
         file_path = os.path.join(Server.SERVER_FOLDER, filename)
+        print(filename)
         progress = tqdm.tqdm(range(int(filesize)), f"Receiving {file_path}", unit="B", unit_scale=True, unit_divisor=1024)
         with open(file_path, "wb") as f:
             while True:

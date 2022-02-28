@@ -2,9 +2,10 @@
 
 from logging import exception
 import socket
-import asyncio
+
 import os
 import tqdm
+
 
 class Client:
     """Implementation of a Kryzbu client."""
@@ -25,7 +26,7 @@ class Client:
             print("Server probably isn't running!!!")
             exit(1)
         filesize = os.path.getsize(file_name)
-        s.send(f"{file_name}{SEPARATOR}{filesize}".encode())
+        s.send(f"{os.path.split(file_name)[1]}{SEPARATOR}{filesize}".encode())
 
         progress = tqdm.tqdm(range(filesize), f"Sending {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
         with open(file_name, "rb") as f:
@@ -35,6 +36,7 @@ class Client:
                     break
                 s.sendall(bytes_read)
                 progress.update(len(bytes_read))
+
         s.close()
 
     @staticmethod
