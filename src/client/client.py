@@ -11,13 +11,13 @@ class Client:
 
     @staticmethod
     def send_file(file_name: str):
-        SEPARATOR = "\\"
+        """Send file to a server."""
+        SEPARATOR = " "
         BUFFER_SIZE = 4096
         host = "127.0.0.1"
         port = 60606
 
         s = socket.socket()
-        print(f"[+] Connecting to {host}:{port}")
         try:
             s.connect((host, port))
         except ConnectionRefusedError as e:

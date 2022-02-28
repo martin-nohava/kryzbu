@@ -10,23 +10,20 @@ class Server:
     IP = "127.0.0.1"
     PORT = 60606
     BUFFER_SIZE = 4096
-    SEPARATOR = "\\"
+    SERVER_FOLDER = os.getenv('APPDATA') + '\\KryzbuServer\\' # Where to save
+    SEPARATOR = " " #TODO: je to na dvo mistech
 
     @staticmethod
-    def recieve_file():     
+    def recieve_file():
         s = socket.socket()
         s.bind((Server.IP, Server.PORT))
         s.listen(10)
-        print(f"[*] Listening as {Server.IP}:{Server.PORT}")
         client_socket, address = s.accept()
-        print(f"[+] {address} is connecting...")
         received = client_socket.recv(Server.BUFFER_SIZE).decode()
         filename, filesize = received.split(Server.SEPARATOR)
-        filename = os.path.abspath("T:\Dokumenty\Programování\Python\kryzbu\\" + filename) #<--------------------------------- Where to Save the File -----------
-        filesize = int(filesize)
-        progress = tqdm.tqdm(range(filesize), f"Receiving {filename}", unit="B", unit_scale=True, unit_divisor=1024)
-        with open(filename, "wb") as f:
-            print("Saving to: " + filename)
+        file_path = os.path.join(Server.SERVER_FOLDER, filename)
+        progress = tqdm.tqdm(range(int(filesize)), f"Receiving {file_path}", unit="B", unit_scale=True, unit_divisor=1024)
+        with open(file_path, "wb") as f:
             while True:
                 bytes_read = client_socket.recv(Server.BUFFER_SIZE)
                 if not bytes_read:
@@ -52,8 +49,3 @@ class Server:
             server.close()
 
             print(data)
-    
-
-if __name__ == '__main__':
-    while True:
-        Server.recieve_file()

@@ -9,3 +9,6 @@
 
 # Ignore __pycache__
 __pycache__
+
+# Ignore Server data folder
+**/server_data/

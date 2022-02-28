@@ -10,13 +10,14 @@ from client import client
 parser = argparse.ArgumentParser()
 group = parser.add_mutually_exclusive_group()
 parser.add_argument("-l", "--list", help="list available files to download", action="store_true")
-group.add_argument("-u", "--upload", metavar="FILE", help="upload file to server", type=str)
-group.add_argument("-d", "--download", metavar="FILE", help="download file from server", type=str)
+group.add_argument("-u", "--upload", metavar="FILE", help="upload file to server", action="extend", nargs="+", type=str)
+group.add_argument("-d", "--download", metavar="FILE", help="download file from server", action="extend", nargs="+", type=str)
 args = parser.parse_args()
 
 if args.upload:
     """Upload file to a server."""
-    client.Client.send_file(args.upload)
+    for file in args.upload:
+        client.Client.send_file(file)
 elif args.download:
     """Download file from server."""
     print("Download not implemented yet!!!")

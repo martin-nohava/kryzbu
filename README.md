@@ -5,6 +5,12 @@
   src="./graphics/kryzbu.png">
 </h1>
 
+
+Soubory serveru jsou ukládané do `C:\Users\<user>\AppData\Roaming\KryzbuServer`
+
+---
+
+
 <h4 align="center">
 Kryptograficky zabezpečené úložiště  🔒
 </h4>
