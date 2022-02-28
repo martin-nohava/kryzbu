@@ -4,7 +4,7 @@ import socket
 import os
 import tqdm
 import os.path
-import time
+from pathlib import Path 
 
 
 class Server:
@@ -13,7 +13,7 @@ class Server:
     IP = "127.0.0.1"
     PORT = 60606
     BUFFER_SIZE = 4096 # TODO: defined on two seperate places (in client.py as well)
-    SERVER_FOLDER = os.getenv('APPDATA') + '\\KryzbuServer\\' # Where to save
+    SERVER_FOLDER = Path("server/_data/files/") # Universal Path object for multi OS path declaration
 
 
     @staticmethod
@@ -30,7 +30,7 @@ class Server:
 
             received = client_connection.recv(Server.BUFFER_SIZE).decode()
             filename, filesize = received.split()
-            file_path = os.path.join(Server.SERVER_FOLDER, filename)
+            file_path = Server.SERVER_FOLDER / os.path.basename(filename) # Prepend storage path
 
             progress = tqdm.tqdm(range(int(filesize)), f"Receiving {file_path}", unit="B", unit_scale=True, unit_divisor=1024)
 
