@@ -5,3 +5,24 @@
 # as a standard command-line tool from everywhere.
 
 import argparse
+from client import client
+
+parser = argparse.ArgumentParser()
+group = parser.add_mutually_exclusive_group()
+parser.add_argument("-l", "--list", help="list available files to download", action="store_true")
+group.add_argument("-u", "--upload", metavar="FILE", help="upload file to server", type=str)
+group.add_argument("-d", "--download", metavar="FILE", help="download file from server", type=str)
+args = parser.parse_args()
+
+if args.upload:
+    """Upload file to a server."""
+    client.Client.send_file(args.upload)
+elif args.download:
+    """Download file from server."""
+    print("Download not implemented yet!!!")
+elif args.list:
+    print("Listing is not implemented yet!!!")
+else:
+    parser.print_help()
+
+

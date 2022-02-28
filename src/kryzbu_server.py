@@ -4,4 +4,8 @@
 # Path to this file can be added to PATH (Windows) to call it
 # as a standard command-line tool from everywhere.
 
-import argparse
+from server import server
+
+
+print('Starting Kryzbu server...')
+server.Server.recieve_file()

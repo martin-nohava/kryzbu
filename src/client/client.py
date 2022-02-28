@@ -1,36 +1,40 @@
 # Client side
 
+from logging import exception
 import socket
 import asyncio
 import os
+import tqdm
 
 class Client:
     """Implementation of a Kryzbu client."""
 
     @staticmethod
-    def send_file():
-        
+    def send_file(file_name: str):
         SEPARATOR = "\\"
         BUFFER_SIZE = 4096
-
-        s = socket.socket()
         host = "127.0.0.1"
         port = 60606
-        print(f"[+] Connecting to {host}:{port}")
-        s.connect((host, port))
-        print("[+] Connected to ", host)
-        filename = input('Enter file name: ')
-        filesize = os.path.getsize(filename)
-        s.send(f"{filename}{SEPARATOR}{filesize}".encode())
 
-        #progress = tqdm.tqdm(range(filesize), f"Sending {filename}", unit="B", unit_scale=True, unit_divisor=1024)
-        with open(filename, "rb") as f:
+        s = socket.socket()
+        print(f"[+] Connecting to {host}:{port}")
+        try:
+            s.connect((host, port))
+        except ConnectionRefusedError as e:
+            print(e)
+            print("Server probably isn't running!!!")
+            exit(1)
+        filesize = os.path.getsize(file_name)
+        s.send(f"{file_name}{SEPARATOR}{filesize}".encode())
+
+        progress = tqdm.tqdm(range(filesize), f"Sending {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
+        with open(file_name, "rb") as f:
             while True:
                 bytes_read = f.read(BUFFER_SIZE)
                 if not bytes_read:
                     break
                 s.sendall(bytes_read)
-                #progress.update(len(bytes_read))
+                progress.update(len(bytes_read))
         s.close()
 
     @staticmethod
@@ -49,4 +53,4 @@ class Client:
         client.close()
 
 if __name__ == '__main__':
-    Client.send_file()
+    Client.send_file('text.txt')
