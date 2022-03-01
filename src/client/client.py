@@ -13,7 +13,7 @@ class Client:
     SERVER_PORT = 60606
 
     @staticmethod
-    def upload(file_name: str):
+    def upload(file_path: str):
         """Upload file to a server."""
 
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
@@ -24,15 +24,17 @@ class Client:
                 print("Server probably isn't running!!!")
                 exit(1)
 
+            file_name = os.path.basename(file_path)
+
             # Send UPLOAD request
-            client.send(f"UPLOAD {os.path.basename(file_name)}".encode())
+            client.send(f"UPLOAD {file_name}".encode())
 
             # Initialize progress bar
-            file_size = os.path.getsize(file_name)
+            file_size = os.path.getsize(file_path)
             progress = tqdm.tqdm(range(file_size), f"Sending {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
 
             # Send file
-            with open(file_name, "rb") as f:
+            with open(file_path, "rb") as f:
                 while True:
                     bytes_read = f.read(Client.BUFFER_SIZE)
                     if not bytes_read:
