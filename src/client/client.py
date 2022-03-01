@@ -25,7 +25,7 @@ class Client:
                 exit(1)
 
             # Send UPLOAD request
-            client.send(f"UPLOAD {os.path.split(file_name)[1]}".encode())
+            client.send(f"UPLOAD {os.path.basename(file_name)}".encode())
 
             # Initialize progress bar
             file_size = os.path.getsize(file_name)

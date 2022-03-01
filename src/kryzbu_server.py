@@ -7,6 +7,6 @@
 from server import server
 
 
-print('[*] Starting Kryzbu server...')
+print('[*] Kryzbu server started...')
 server.Server.run()
 print('[*] Kryzbu server ended...')

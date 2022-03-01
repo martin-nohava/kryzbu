@@ -17,34 +17,36 @@ class Server:
 
     @staticmethod
     def run():
-        """Run server's main loop."""
+        """Server's main loop for handling clients requests."""
 
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as handle:
             handle.bind((Server.IP, Server.PORT))
-            handle.listen(10)
-            conn, addr = handle.accept()
-            request = conn.recv(1024).decode()
 
-            if 'UPLOAD' in request:
-                # Request to upload file structure: 'UPLOAD FILENAME'
-                _, file_name = request.split()
-                Server.recieve_file(file_name, conn)
-            elif 'DOWNLOAD' in request:
-                # Request to download file structure: 'DOWNLOAD FILENAME'
-                _, file_name = request.split()
-                Server.serve_file(file_name, conn)
-            elif 'LIST_DIR' in request:
-                # Request to list available file for download structure: 'LIST_DIR'
-                pass
-            else:
-                conn.send('UN-KNOWN command, use \{UPLOAD, DOWNLOAD, LIST_DIR\}'.encode())
+            while True:
+                handle.listen(10)
+                conn, addr = handle.accept()
+                request = conn.recv(1024).decode()
+
+                if 'UPLOAD' in request:
+                    # Request to upload file structure: 'UPLOAD FILENAME'
+                    _, file_name = request.split()
+                    Server.recieve_file(file_name, conn)
+                elif 'DOWNLOAD' in request:
+                    # Request to download file structure: 'DOWNLOAD FILENAME'
+                    _, file_name = request.split()
+                    Server.serve_file(file_name, conn)
+                elif 'LIST_DIR' in request:
+                    # Request to list available file for download structure: 'LIST_DIR'
+                    pass
+                else:
+                    conn.send('UN-KNOWN command, use \{UPLOAD, DOWNLOAD, LIST_DIR\}'.encode())
 
 
     @staticmethod
     def recieve_file(file_name: str, conn: socket.socket):
         """Receive file from a client."""
 
-        file_path = Server.SERVER_FOLDER / os.path.basename(file_name) # Prepend storage path
+        file_path = Server.SERVER_FOLDER / file_name # Prepend storage path
 
         with open(file_path, "wb") as f:
             while True:
