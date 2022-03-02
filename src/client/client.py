@@ -1,8 +1,9 @@
 # Client side
 
-import socket
 import os
 import tqdm
+import socket
+import pickle
 
 
 class Client:
@@ -45,6 +46,7 @@ class Client:
             client.close()
 
 
+    @staticmethod
     def download(file_name: str):
         """Download file from a server."""
 
@@ -75,3 +77,24 @@ class Client:
                     progress.update(len(bytes_read))
 
             client.close()
+
+
+    @staticmethod
+    def list_files():
+        """List stored files on server."""
+
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
+            try:
+                client.connect((Client.SERVER_IP, Client.SERVER_PORT))
+            except ConnectionRefusedError as e:
+                print(e)
+                print("Server probably ins't running!!!")
+                exit(1)
+
+            # Send LIST_DIR request
+            client.send(f"LIST_DIR".encode())
+
+            # Receive available files
+            files = pickle.loads(client.recv(1024))   # TODO: Potentional problem when files list is bigger than 1024b
+            print(files)
+

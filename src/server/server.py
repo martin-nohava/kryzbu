@@ -1,8 +1,8 @@
 # Server side
 
-import socket
 import os
-import os.path
+import socket
+import pickle
 from pathlib import Path
 from .loglib import Log
 
@@ -38,9 +38,11 @@ class Server:
                     Server.serve_file(file_name, conn)
                 elif 'LIST_DIR' in request:
                     # Request to list available file for download structure: 'LIST_DIR'
-                    pass
+                    Server.list_files(conn)
                 else:
                     conn.send('UN-KNOWN command, use \{UPLOAD, DOWNLOAD, LIST_DIR\}'.encode())
+
+                conn.close()
 
 
     @staticmethod
@@ -57,8 +59,6 @@ class Server:
                 f.write(bytes_read)
         # Logs event type 'UPLOAD', with sucess 0, and payload with file name
         Log.event('UPLOAD', 0, [file_name])
-
-        conn.close()
 
 
     @staticmethod
@@ -79,4 +79,10 @@ class Server:
                     break
                 conn.send(bytes_read)
 
-        conn.close()
+
+    @staticmethod
+    def list_files(conn: socket.socket):
+        """Send available files for download."""
+
+        files = os.listdir(Server.SERVER_FOLDER)
+        conn.send(pickle.dumps(files))

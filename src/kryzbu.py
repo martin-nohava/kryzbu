@@ -15,16 +15,15 @@ group.add_argument("-d", "--download", metavar="FILE", help="download file from 
 args = parser.parse_args()
 
 if args.upload:
-    """Upload file to a server."""
+    # Upload file to a server.
     for file in args.upload:
         client.Client.upload(file)
 elif args.download:
-    """Download file from server."""
+    # Download file from server.
     for file in args.download:
         client.Client.download(file)
 elif args.list:
-    print("Listing is not implemented yet!!!")
+    # List available files on server.
+    client.Client.list_files()
 else:
     parser.print_help()
-
-
