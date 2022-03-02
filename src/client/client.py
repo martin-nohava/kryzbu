@@ -100,5 +100,8 @@ class Client:
 
             # Receive available files
             files = pickle.loads(client.recv(1024))   # TODO: Potentional problem when files list is bigger than 1024b
-            print('[{}]'.format(', '.join(files)))
+
+            for r in range(len(files)):
+                print(files[r])
+
 
