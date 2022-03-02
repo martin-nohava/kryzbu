@@ -11,4 +11,4 @@
 __pycache__
 
 # Ignore Server data folder
-**/server_data/
+**/_data/
