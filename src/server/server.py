@@ -58,6 +58,8 @@ class Server:
         # Logs event type 'UPLOAD', with sucess 0, and payload with file name
         Log.event('UPLOAD', 0, [file_name])
 
+        conn.close()
+
 
     @staticmethod
     def serve_file(file_name: str, conn: socket.socket):
@@ -76,3 +78,5 @@ class Server:
                 if not bytes_read:
                     break
                 conn.send(bytes_read)
+
+        conn.close()

@@ -41,6 +41,8 @@ class Client:
                         break
                     client.sendall(bytes_read)
                     progress.update(len(bytes_read))
+            
+            client.close()
 
 
     def download(file_name: str):
@@ -71,3 +73,5 @@ class Client:
                         break
                     f.write(bytes_read)
                     progress.update(len(bytes_read))
+
+            client.close()
