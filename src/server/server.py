@@ -3,7 +3,8 @@
 import socket
 import os
 import os.path
-from pathlib import Path 
+from pathlib import Path
+from .loglib import Log
 
 
 class Server:
@@ -54,6 +55,8 @@ class Server:
                 if not bytes_read:
                     break
                 f.write(bytes_read)
+        # Logs event type 'UPLOAD', with sucess 0, and payload with file name
+        Log.event('UPLOAD', 0, [file_name])
 
 
     @staticmethod
