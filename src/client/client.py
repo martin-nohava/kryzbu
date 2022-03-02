@@ -4,6 +4,7 @@ import os
 import tqdm
 import socket
 import pickle
+from pathlib import Path
 
 
 class Client:
@@ -12,6 +13,8 @@ class Client:
     BUFFER_SIZE = 4096
     SERVER_IP = "127.0.0.1"
     SERVER_PORT = 60606
+    CLIENT_FOLDER = Path("client/_data/files/")
+
 
     @staticmethod
     def upload(file_path: str):
@@ -64,11 +67,12 @@ class Client:
             # Receive file info
             file_info = client.recv(Client.BUFFER_SIZE).decode()
             file_name, file_size = file_info.split(';')
+            file_path = Client.CLIENT_FOLDER / file_name
 
             progress = tqdm.tqdm(range(int(file_size)), f"Receiving {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
 
             # Receive file
-            with open(file_name, "wb") as f:
+            with open(file_path, "wb") as f:
                 while True:
                     bytes_read = client.recv(Client.BUFFER_SIZE)
                     if not bytes_read:
