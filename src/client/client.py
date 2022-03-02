@@ -28,7 +28,7 @@ class Client:
             file_name = os.path.basename(file_path)
 
             # Send UPLOAD request
-            client.send(f"UPLOAD {file_name}".encode())
+            client.send(f"UPLOAD;{file_name}".encode())
 
             # Initialize progress bar
             file_size = os.path.getsize(file_path)
@@ -59,11 +59,11 @@ class Client:
                 exit(1)
 
             # Send DOWNLOAD request
-            client.send(f"DOWNLOAD {file_name}".encode())
+            client.send(f"DOWNLOAD;{file_name}".encode())
 
             # Receive file info
             file_info = client.recv(Client.BUFFER_SIZE).decode()
-            file_name, file_size = file_info.split()
+            file_name, file_size = file_info.split(';')
 
             progress = tqdm.tqdm(range(int(file_size)), f"Receiving {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
 

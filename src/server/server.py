@@ -30,11 +30,11 @@ class Server:
 
                 if 'UPLOAD' in request:
                     # Request to upload file structure: 'UPLOAD FILENAME'
-                    _, file_name = request.split()
+                    _, file_name = request.split(';')
                     Server.recieve_file(file_name, conn)
                 elif 'DOWNLOAD' in request:
                     # Request to download file structure: 'DOWNLOAD FILENAME'
-                    _, file_name = request.split()
+                    _, file_name = request.split(';')
                     Server.serve_file(file_name, conn)
                 elif 'LIST_DIR' in request:
                     # Request to list available file for download structure: 'LIST_DIR'
@@ -69,7 +69,7 @@ class Server:
 
         # Send file info
         file_size = os.path.getsize(file_path)
-        conn.send(f"{file_name} {file_size}".encode())
+        conn.send(f"{file_name};{file_size}".encode())
 
         # Send file
         with open(file_path, "rb") as f:
