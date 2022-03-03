@@ -11,10 +11,4 @@
 __pycache__
 
 # Ignore Server storage folder
-**/files/
-
-# Ignore Server logs
-**/logs/
-
-# Ignore File_index
-files.db
+**/_data/
