@@ -17,6 +17,7 @@ class Client:
 
 
     @staticmethod
+
     def upload(file_path: str):
         """Upload file to a server."""
 
@@ -34,7 +35,9 @@ class Client:
             client.send(f"UPLOAD;{file_name}".encode())
 
             # Initialize progress bar
+
             file_size = os.path.getsize(file_path)
+
             progress = tqdm.tqdm(range(file_size), f"Sending {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
 
             # Send file
@@ -45,7 +48,7 @@ class Client:
                         break
                     client.sendall(bytes_read)
                     progress.update(len(bytes_read))
-            
+
             client.close()
 
 

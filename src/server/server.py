@@ -5,7 +5,7 @@ import socket
 import pickle
 from pathlib import Path
 from .loglib import Log
-
+from os.path import exists
 
 class Server:
     """Implementation of a Kryzbu server (Cryptographically Secure Storage)."""
@@ -48,17 +48,19 @@ class Server:
     @staticmethod
     def recieve_file(file_name: str, conn: socket.socket):
         """Receive file from a client."""
+        if exists(file_name):
+            file_path = Server.SERVER_FOLDER / file_name # Prepend storage path
 
-        file_path = Server.SERVER_FOLDER / file_name # Prepend storage path
-
-        with open(file_path, "wb") as f:
-            while True:
-                bytes_read = conn.recv(Server.BUFFER_SIZE)
-                if not bytes_read:
-                    break
-                f.write(bytes_read)
-        # Logs event type 'UPLOAD', with sucess 0, and payload with file name
-        Log.event('UPLOAD', 0, [file_name])
+            with open(file_path, "wb") as f:
+                while True:
+                    bytes_read = conn.recv(Server.BUFFER_SIZE)
+                    if not bytes_read:
+                        break
+                    f.write(bytes_read)
+            # Logs event type 'UPLOAD', with sucess 0, and payload with file name
+            Log.event('UPLOAD', 0, [file_name])
+        else:
+            print(" ")
 
 
     @staticmethod
