@@ -75,7 +75,7 @@ class Client:
             progress = tqdm.tqdm(range(int(file_size)), f"Receiving {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
 
             # Receive file
-            with open(file_path, "wb") as f:
+            with open(str(os.path.join(os.path.expanduser('~/Downloads'), file_name)), "wb") as f:
                 while True:
                     bytes_read = client.recv(Client.BUFFER_SIZE)
                     if not bytes_read:

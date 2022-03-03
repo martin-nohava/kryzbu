@@ -15,6 +15,7 @@ class Log:
     # status – status, if success 0, else pass error message e here
     # payload – list of required information to log
     def event(type: str, status, payload: list) -> None:
+        """Writes event to log file"""
         
         # Switch for finding correct event type,
         # every event requires different data input

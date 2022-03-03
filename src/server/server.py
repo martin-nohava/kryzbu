@@ -81,6 +81,7 @@ class Server:
                     break
                 conn.send(bytes_read)
 
+        Log.event('DOWNLOAD', 0, [file_name])
 
     @staticmethod
     def list_files(conn: socket.socket):
