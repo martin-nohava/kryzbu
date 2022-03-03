@@ -4,8 +4,6 @@ import os
 import tqdm
 import socket
 import pickle
-from pathlib import Path
-
 
 class Client:
     """Implementation of a Kryzbu client."""
@@ -13,7 +11,6 @@ class Client:
     BUFFER_SIZE = 4096
     SERVER_IP = "127.0.0.1"
     SERVER_PORT = 60606
-    CLIENT_FOLDER = Path("client/_data/files/")
 
 
     @staticmethod
@@ -70,7 +67,6 @@ class Client:
             # Receive file info
             file_info = client.recv(Client.BUFFER_SIZE).decode()
             file_name, file_size = file_info.split(';')
-            file_path = Client.CLIENT_FOLDER / file_name
 
             progress = tqdm.tqdm(range(int(file_size)), f"Receiving {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
 
