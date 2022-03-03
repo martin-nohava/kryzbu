@@ -21,6 +21,8 @@ class Server:
     def run():
         """Server's main loop for handling clients requests."""
 
+        Server.init()
+
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as handle:
             handle.bind((Server.IP, Server.PORT))
 
@@ -49,6 +51,17 @@ class Server:
 
                 conn.close()
 
+    @staticmethod
+    def init() -> None:
+        """Checks if required folder structure for server exists, any other initialization stuf should be here."""
+
+        PATHS = (
+        'server/_data/files/',
+        'server/_data/logs/'
+        )
+        for path in PATHS:
+            # Any missing parents of this path are created as needed, if folder already exists nothing happens
+            Path(path).mkdir(parents=True, exist_ok=True)
 
     @staticmethod
     def recieve_file(file_name: str, conn: socket.socket):
