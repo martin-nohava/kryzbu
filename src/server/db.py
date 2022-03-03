@@ -57,9 +57,12 @@ class File_index():
         list = []
         con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
         cur = con.cursor()
-        for row in cur.execute("SELECT * FROM file_index"):
-            list.append(row)
-        con.close()
+        try:
+            for row in cur.execute("SELECT * FROM file_index"):
+                list.append(row)
+            con.close()
+        except:
+            print('WARNING: File database empty!')
         return list
 
 

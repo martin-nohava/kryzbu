@@ -107,10 +107,12 @@ class Client:
             # Receive available files
             list = pickle.loads(client.recv(1024))   # TODO: Potentional problem when files list is bigger than 1024b
             
-            print ("{:<20} {:>1} {:<15} {:>1} {:<15} {:>1} {:<10}".format('File','|','Owner','|','Created','|','Downloads'))
+            print ("{:<20} {:<15} {:<15} {:<15}".format('File','Owner','Created','Downloads'))
             print ("{:–<65}".format('–'))
-            for row in list:
-                print ("{:<20} {:>1} {:<15} {:>1} {:<15} {:>1} {:<10}".format(row[0], '|', row[1], '|', row[2], '|', str(row[3])))
-                #print(row[0] + ' ' + row[1] + ' ' + row[2] + ' ' + str(row[3]))
+            if len(list) != 0:
+                for row in list:
+                    print ("{:<20} {:<15} {:<15} {:<15}".format(row[0], row[1], row[2], str(row[3])))
+            else:
+                 print ("{:^65}".format('Nothing here'))
 
 
