@@ -6,7 +6,7 @@ import pickle
 from pathlib import Path
 from .loglib import Log
 from .db import File_index
-from os.path import exists
+
 
 class Server:
     """Implementation of a Kryzbu server (Cryptographically Secure Storage)."""
@@ -41,7 +41,7 @@ class Server:
                     # Request to list available file for download structure: 'LIST_DIR'
                     Server.list_files(conn)
                 else:
-                    conn.send('UN-KNOWN command, use \{UPLOAD, DOWNLOAD, LIST_DIR\}'.encode())
+                    conn.send('UN-KNOWN request, use \{UPLOAD, DOWNLOAD, LIST_DIR\}'.encode())
 
                 conn.close()
 
@@ -69,20 +69,25 @@ class Server:
 
         file_path = os.path.join(Server.SERVER_FOLDER, file_name)
 
-        # Send file info
-        file_size = os.path.getsize(file_path)
-        conn.send(f"{file_name};{file_size}".encode())
+        if os.path.exists(file_path):
+            # Send file info
+            file_size = os.path.getsize(file_path)
+            conn.send(f"{file_name};{file_size}".encode())
 
-        # Send file
-        with open(file_path, "rb") as f:
-            while True:
-                bytes_read = f.read(Server.BUFFER_SIZE)
-                if not bytes_read:
-                    break
-                conn.send(bytes_read)
+            # Send file
+            with open(file_path, "rb") as f:
+                while True:
+                    bytes_read = f.read(Server.BUFFER_SIZE)
+                    if not bytes_read:
+                        break
+                    conn.send(bytes_read)
 
-        Log.event('DOWNLOAD', 0, [file_name])
-        File_index.download(file_name)
+            Log.event('DOWNLOAD', 0, [file_name])
+            File_index.download(file_name)
+        else:
+            # Requested file does NOT exist
+            conn.send("ERROR;FILE_NOT_FOUND".encode())
+
 
     @staticmethod
     def list_files(conn: socket.socket):

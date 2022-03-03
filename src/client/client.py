@@ -64,9 +64,16 @@ class Client:
             # Send DOWNLOAD request
             client.send(f"DOWNLOAD;{file_name}".encode())
 
-            # Receive file info
-            file_info = client.recv(Client.BUFFER_SIZE).decode()
-            file_name, file_size = file_info.split(';')
+            # Receive aswer
+            answer = client.recv(Client.BUFFER_SIZE).decode()
+            if 'ERROR' in answer:
+                print(f"File '{file_name}' does NOT exist")
+                print("Available files:")
+                Client.list_files()
+                client.close()
+                return
+            else:
+                file_name, file_size = answer.split(';')
 
             progress = tqdm.tqdm(range(int(file_size)), f"Receiving {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
 
