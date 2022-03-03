@@ -106,7 +106,6 @@ class Client:
 
             # Receive answer
             answer = client.recv(Client.BUFFER_SIZE).decode()
-            print(answer)
             if 'SUCCESS' in answer:
                 print(f"File '{file_name}' successfully removed")
             elif 'ERROR' in answer:
