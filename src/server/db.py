@@ -30,7 +30,7 @@ class File_index():
 
     @staticmethod
     def download(file_name: str):
-        """Update download count for a file"""
+        """Update download count for a file."""
         
         con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
         cur = con.cursor()
@@ -38,6 +38,17 @@ class File_index():
         cur.execute("UPDATE file_index SET downloads=? WHERE name=?", (cur.fetchone()[0] + 1, file_name))
         con.commit()
         con.close()
+
+    
+    @staticmethod
+    def delete(file_name: str):
+        """Remove file record."""
+
+        con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
+        cur = con.cursor()
+        cur.execute("DELETE FROM file_index WHERE name=:name", {"name": file_name})
+        con.commit()
+        con.close()        
     
 
     @staticmethod

@@ -5,6 +5,7 @@
 # as a standard command-line tool from everywhere.
 
 import argparse
+from ast import arg
 from client import client
 
 parser = argparse.ArgumentParser()
@@ -12,18 +13,23 @@ group = parser.add_mutually_exclusive_group()
 parser.add_argument("-l", "--list", help="list available files to download", action="store_true")
 group.add_argument("-u", "--upload", metavar="FILE", help="upload file to server", action="extend", nargs="+", type=str)
 group.add_argument("-d", "--download", metavar="FILE", help="download file from server", action="extend", nargs="+", type=str)
+group.add_argument("-r", "--remove", metavar="FILE", help="remove file from server", action="extend", nargs="+", type=str)
 args = parser.parse_args()
 
 if args.upload:
-    # Upload file to a server.
+    # Upload file to a server
     for file in args.upload:
         client.Client.upload(file)
 elif args.download:
-    # Download file from server.
+    # Download file from server
     for file in args.download:
         client.Client.download(file)
+elif args.remove:
+    # Remove file from server
+    for file in args.remove:
+        client.Client.remove(file)
 elif args.list:
-    # List available files on server.
+    # List available files on server
     client.Client.list_files()
 else:
     parser.print_help()

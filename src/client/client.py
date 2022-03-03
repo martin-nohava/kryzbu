@@ -90,6 +90,37 @@ class Client:
 
 
     @staticmethod
+    def remove(file_name: str):
+        """Remove file from a server."""
+
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
+            try:
+                client.connect((Client.SERVER_IP, Client.SERVER_PORT))
+            except ConnectionRefusedError as e:
+                print(e)
+                print("Server probably ins't running!!!")
+                exit(1)
+
+            # Send REMOVE request
+            client.send(f"REMOVE;{file_name}".encode())
+
+            # Receive answer
+            answer = client.recv(Client.BUFFER_SIZE).decode()
+            print(answer)
+            if 'SUCCESS' in answer:
+                print(f"File '{file_name}' successfully removed")
+            elif 'ERROR' in answer:
+                # FileNotFound error
+                print(f"File '{file_name}' does NOT exist, CANNOT remove")
+                print("Available files:")
+                Client.list_files()
+            else:
+                print('donow')
+
+            client.close()
+
+
+    @staticmethod
     def list_files():
         """List stored files on server."""
 

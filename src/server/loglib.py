@@ -44,6 +44,18 @@ class Log:
             # ERROR
             else: Log.write(err)
 
+        # DELETE: file was deleted from the server
+        # *********** payload ***********
+        # [0] – filename, e.g. testfile.txt
+        # [1] – username, e.g. john_doe (NOT REQUIRED IN THIS VERSION)
+        elif type == "DELETE":
+            suc = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " " + type + " User john_doe deleted file " + payload[0] + ".\n"
+            err = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " " + type + " ERROR User john_doe failed to delete file " + payload[0] + " with error " + str(status) + ".\n"
+            # SUCESS
+            if status == 0: Log.write(suc)
+            # ERROR
+            else: Log.write(err)
+
     @staticmethod
     # Function for appending lines to logfile
     def write(log: str) -> None:

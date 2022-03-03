@@ -30,15 +30,19 @@ class Server:
                 request = conn.recv(1024).decode()
 
                 if 'UPLOAD' in request:
-                    # Request to upload file structure: 'UPLOAD FILENAME'
+                    # Request to upload file, structure: 'UPLOAD FILENAME'
                     _, file_name = request.split(';')
                     Server.recieve_file(file_name, conn)
                 elif 'DOWNLOAD' in request:
-                    # Request to download file structure: 'DOWNLOAD FILENAME'
+                    # Request to download file, structure: 'DOWNLOAD FILENAME'
                     _, file_name = request.split(';')
                     Server.serve_file(file_name, conn)
+                elif 'REMOVE' in request:
+                    # Request to delete file, structure: 'REMOVE FILENAME'
+                    _, file_name = request.split(';')
+                    Server.remove_file(file_name, conn)
                 elif 'LIST_DIR' in request:
-                    # Request to list available file for download structure: 'LIST_DIR'
+                    # Request to list available file for download, structure: 'LIST_DIR'
                     Server.list_files(conn)
                 else:
                     conn.send('UN-KNOWN request, use \{UPLOAD, DOWNLOAD, LIST_DIR\}'.encode())
@@ -84,6 +88,22 @@ class Server:
 
             Log.event('DOWNLOAD', 0, [file_name])
             File_index.download(file_name)
+        else:
+            # Requested file does NOT exist
+            conn.send("ERROR;FILE_NOT_FOUND".encode())
+
+
+    @staticmethod
+    def remove_file(file_name: str, conn: socket.socket):
+        """Remove file."""
+
+        file_path = os.path.join(Server.SERVER_FOLDER, file_name)
+
+        if os.path.exists(file_path):
+            os.remove(file_path)
+            Log.event('DELETE', 0, [file_name])
+            File_index.delete(file_name)
+            conn.send(f"SUCCESS;fileDeleted;{file_name}".encode())
         else:
             # Requested file does NOT exist
             conn.send("ERROR;FILE_NOT_FOUND".encode())
