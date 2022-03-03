@@ -98,9 +98,12 @@ class Client:
             client.send(f"LIST_DIR".encode())
 
             # Receive available files
-            files = pickle.loads(client.recv(1024))   # TODO: Potentional problem when files list is bigger than 1024b
-
-            for r in range(len(files)):
-                print(files[r])
+            list = pickle.loads(client.recv(1024))   # TODO: Potentional problem when files list is bigger than 1024b
+            
+            print('************************************************')
+            print('* File     | Owner     | Created   | Downloads *')
+            print('************************************************')
+            for row in list:
+                print(row[0] + ' ' + row[1] + ' ' + row[2] + ' ' + str(row[3]))
 
 

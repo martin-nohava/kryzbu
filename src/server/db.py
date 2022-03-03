@@ -49,6 +49,18 @@ class File_index():
         for row in cur.execute("SELECT * FROM file_index"):
             print(row)
         con.close()
+    
+    @staticmethod
+    def return_all() -> list:
+        """Return all data."""
+
+        list = []
+        con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
+        cur = con.cursor()
+        for row in cur.execute("SELECT * FROM file_index"):
+            list.append(row)
+        con.close()
+        return list
 
 
     @staticmethod

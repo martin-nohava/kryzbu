@@ -87,6 +87,5 @@ class Server:
     @staticmethod
     def list_files(conn: socket.socket):
         """Send available files for download."""
-
-        files = os.listdir(Server.SERVER_FOLDER)
-        conn.send(pickle.dumps(files))
+        
+        conn.send(pickle.dumps(File_index.return_all()))
