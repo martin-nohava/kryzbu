@@ -15,3 +15,6 @@ __pycache__
 
 # Ignore Server logs
 **/logs/
+
+# Ignore File_index
+files.db

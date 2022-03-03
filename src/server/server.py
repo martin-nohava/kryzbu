@@ -5,6 +5,7 @@ import socket
 import pickle
 from pathlib import Path
 from .loglib import Log
+from .db import File_index
 from os.path import exists
 
 class Server:
@@ -48,6 +49,7 @@ class Server:
     @staticmethod
     def recieve_file(file_name: str, conn: socket.socket):
         """Receive file from a client."""
+
         if exists(file_name):
             file_path = Server.SERVER_FOLDER / file_name # Prepend storage path
 
@@ -59,6 +61,7 @@ class Server:
                     f.write(bytes_read)
             # Logs event type 'UPLOAD', with sucess 0, and payload with file name
             Log.event('UPLOAD', 0, [file_name])
+            File_index.add(file_name)
         else:
             print(" ")
 
@@ -82,6 +85,7 @@ class Server:
                 conn.send(bytes_read)
 
         Log.event('DOWNLOAD', 0, [file_name])
+        File_index.download(file_name)
 
     @staticmethod
     def list_files(conn: socket.socket):
