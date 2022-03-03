@@ -11,6 +11,7 @@ from client import client
 parser = argparse.ArgumentParser()
 group = parser.add_mutually_exclusive_group()
 parser.add_argument("-l", "--list", help="list available files to download", action="store_true")
+parser.add_argument("-la", "--listall", help="list available files to download including additional info", action="store_true")
 group.add_argument("-u", "--upload", metavar="FILE", help="upload file to server", action="extend", nargs="+", type=str)
 group.add_argument("-d", "--download", metavar="FILE", help="download file from server", action="extend", nargs="+", type=str)
 group.add_argument("-r", "--remove", metavar="FILE", help="remove file from server", action="extend", nargs="+", type=str)
@@ -30,6 +31,9 @@ elif args.remove:
         client.Client.remove(file)
 elif args.list:
     # List available files on server
-    client.Client.list_files()
+    client.Client.list_files(False)
+elif args.listall:
+    # List available files on server including additional info
+    client.Client.list_files(True)
 else:
     parser.print_help()

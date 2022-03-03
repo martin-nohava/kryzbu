@@ -120,8 +120,8 @@ class Client:
 
 
     @staticmethod
-    def list_files():
-        """List stored files on server."""
+    def list_files(detailed: bool):
+        """List stored files on server. True: detailed view, False: basic view"""
 
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
             try:
@@ -137,12 +137,19 @@ class Client:
             # Receive available files
             list = pickle.loads(client.recv(1024))   # TODO: Potentional problem when files list is bigger than 1024b
             
-            print ("{:<20} {:<15} {:<15} {:<15}".format('File','Owner','Created','Downloads'))
-            print ("{:–<65}".format('–'))
-            if len(list) != 0:
-                for row in list:
-                    print ("{:<20} {:<15} {:<15} {:<15}".format(row[0], row[1], row[2], str(row[3])))
+            if detailed:
+                print ("{:<20} {:<15} {:<15} {:<15}".format('File','Owner','Created','Downloads'))
+                print ("{:–<65}".format('–'))
+                if len(list) != 0:
+                    for row in list:
+                        print ("{:<20} {:<15} {:<15} {:<15}".format(row[0], row[1], row[2], str(row[3])))
+                else:
+                    print ("{:^65}".format('Nothing here'))
             else:
-                 print ("{:^65}".format('Nothing here'))
+                if len(list) != 0:
+                    for row in list:
+                        print(row[0], end='\t')
+                else:
+                    print ('Nothing here')
 
 
