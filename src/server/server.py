@@ -63,6 +63,10 @@ class Server:
             # Any missing parents of this path are created as needed, if folder already exists nothing happens
             Path(path).mkdir(parents=True, exist_ok=True)
 
+        # Initiate file index
+        File_index.init()
+        
+
     @staticmethod
     def recieve_file(file_name: str, conn: socket.socket):
         """Receive file from a client."""

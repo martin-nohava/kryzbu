@@ -11,6 +11,18 @@ class File_index():
 
     FOLDER = Path("server/_data/")
     NAME = 'files.db'
+
+
+    @staticmethod
+    def init():
+        """Check if file index already exists, create empty one if not."""
+        
+        if not File_index.table_exists():
+            con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
+            cur = con.cursor()
+            cur.execute("CREATE TABLE file_index (name text, owner text, uploaded date, downloads int)")
+            con.commit()
+            con.close()
    
 
     @staticmethod
@@ -19,10 +31,6 @@ class File_index():
 
         con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
         cur = con.cursor()
-
-        if not File_index.table_exists():   # Create table if it dosn't exist
-            cur.execute("CREATE TABLE file_index (name text, owner text, uploaded date, downloads int)")
-
         cur.execute("INSERT INTO file_index VALUES (?,?,?,?)", (file_name, 'everyone', datetime.datetime.now().strftime("%m/%d/%Y"), 0))
         con.commit()
         con.close()
