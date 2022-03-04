@@ -64,7 +64,7 @@ class Server:
             Path(path).mkdir(parents=True, exist_ok=True)
 
         # Initiate file index
-        File_index.init()
+        File_index.init(Server.SERVER_FOLDER)
         
 
     @staticmethod
