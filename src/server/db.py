@@ -35,7 +35,7 @@ class User_db():
         cur = con.cursor()
         cur.execute(f"INSERT INTO {User_db.TABLE_NAME} VALUES (?,?,?,?)", (user_name, pass_hash, pub_key, secret))
         print(f"INFO, User_db: New user successfully added, name: {user_name}")
-        # TODO: add Log event
+        Log.event(Log.Event.REGISTER, 0, [user_name])
         con.commit()
         con.close()
 
@@ -46,7 +46,7 @@ class User_db():
 
         Database.delete(Database.Table.USER_DB, user_name)
         print(f"INFO, User_db: User successfully deleted, name: {user_name}")
-        # TODO: add Log event
+        Log.event(Log.Event.UNREGISTER, 0, [user_name])
 
     
     @staticmethod

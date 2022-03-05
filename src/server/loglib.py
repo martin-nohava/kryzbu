@@ -17,6 +17,9 @@ class Log:
         UPLOAD = 1
         DOWNLOAD = 2
         DELETE = 3
+        REGISTER = 4
+        UNREGISTER = 5
+
 
     @staticmethod
     # Function params definition:
@@ -64,6 +67,29 @@ class Log:
             if status == 0: Log.write(suc)
             # ERROR
             else: Log.write(err)
+
+        # REGISTER: user registered
+        # *********** payload ***********
+        # [0] – username, e.g. john_doe, everyone
+        elif type == Log.Event.REGISTER:
+            suc = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " REGISTER User " + payload[0] + " was registered.\n"
+            err = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " REGISTER ERROR User " + payload[0] + " registration failed with error " + str(status) + ".\n"
+            # SUCESS
+            if status == 0: Log.write(suc)
+            # ERROR
+            else: Log.write(err)
+
+        # UNREGISTER: user un-registered (deleted)
+        # *********** payload ***********
+        # [0] – username, e.g. john_doe, everyone
+        elif type == Log.Event.UNREGISTER:
+            suc = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " UNREGISTER User " + payload[0] + " was unregistered.\n"
+            err = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " UNREGISTER ERROR User " + payload[0] + " unregistration failed with error " + str(status) + ".\n"
+            # SUCESS
+            if status == 0: Log.write(suc)
+            # ERROR
+            else: Log.write(err)    
+
 
     @staticmethod
     # Function for appending lines to logfile
