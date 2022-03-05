@@ -77,14 +77,14 @@ class File_index():
             if not cur.fetchone():
                 cur.execute("INSERT INTO file_index VALUES (?,?,?,?)", (file, 'Local_Admin', datetime.datetime.now().strftime("%m/%d/%Y"), 0))
                 print(f"WARNING, File_index: File '{file}' was not indexed, new record was added to file index and UPLOAD was logged")
-                Log.event("UPLOAD", 0, [file, 'Local_Admin'])
+                Log.event(Log.Event.UPLOAD, 0, [file, 'Local_Admin'])
 
         # Check for indexed but not existing files
         for file in File_index.return_all():
             if not os.path.exists(storage_folder / file[0]):    # file is a tuple, type not supported => need [0]
                 cur.execute("DELETE FROM file_index WHERE name=:name", {"name": file[0]})
                 print(f"WARNING, File_index: File '{file[0]}' was indexed but did NOT exist, record was deleted from file index and DELETE was logged")
-                Log.event("DELETE", 0, [file[0], 'Local_Admin'])
+                Log.event(Log.Event.DELETE, 0, [file[0], 'Local_Admin'])
 
         con.commit()
         con.close()
