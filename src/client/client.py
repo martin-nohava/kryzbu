@@ -5,6 +5,7 @@ import tqdm
 import socket
 import pickle
 
+
 class Client:
     """Implementation of a Kryzbu client."""
 
@@ -70,9 +71,9 @@ class Client:
             # Receive aswer
             answer = client.recv(Client.BUFFER_SIZE).decode()
             if 'ERROR' in answer:
-                print(f"File '{file_name}' does NOT exist")
+                print(f"File '{file_name}' does NOT exist, CANNOT download")
                 print("Available files:")
-                Client.list_files()
+                Client.list_files(detailed=False)
                 client.close()
                 return
             else:
@@ -115,7 +116,7 @@ class Client:
                 # FileNotFound error
                 print(f"File '{file_name}' does NOT exist, CANNOT remove")
                 print("Available files:")
-                Client.list_files()
+                Client.list_files(detailed=False)
 
             client.close()
 
