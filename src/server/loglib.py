@@ -32,10 +32,10 @@ class Log:
         # UPLOAD: file was uploaded to the server
         # *********** payload ***********
         # [0] – filename, e.g. testfile.txt
-        # [1] – username, e.g. john_doe (NOT REQUIRED IN THIS VERSION)
+        # [1] – username, e.g. john_doe, everyone
         if type == Log.Event.UPLOAD:
-            suc = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " UPLOAD User john_doe uploaded file " + payload[0] + ".\n"
-            err = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " UPLOAD ERROR User john_doe failed to upload file " + payload[0] + " with error " + str(status) + ".\n"
+            suc = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " UPLOAD User " + payload[1] + " uploaded file " + payload[0] + ".\n"
+            err = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " UPLOAD ERROR " + payload[1] + " failed to upload file " + payload[0] + " with error " + str(status) + ".\n"
             # SUCESS
             if status == 0: Log.write(suc)
             # ERROR
@@ -44,10 +44,10 @@ class Log:
         # DOWNLOAD: file was downloaded from the server
         # *********** payload ***********
         # [0] – filename, e.g. testfile.txt
-        # [1] – username, e.g. john_doe (NOT REQUIRED IN THIS VERSION)
+        # [1] – username, e.g. john_doe, everyone
         elif type == Log.Event.DOWNLOAD:
-            suc = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " DOWNLOAD User john_doe downloaded file " + payload[0] + ".\n"
-            err = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " DOWNLOAD ERROR User john_doe failed to download file " + payload[0] + " with error " + str(status) + ".\n"
+            suc = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " DOWNLOAD User " + payload[1] + " downloaded file " + payload[0] + ".\n"
+            err = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " DOWNLOAD ERROR User " + payload[1] + " failed to download file " + payload[0] + " with error " + str(status) + ".\n"
             # SUCESS
             if status == 0: Log.write(suc)
             # ERROR
@@ -56,10 +56,10 @@ class Log:
         # DELETE: file was deleted from the server
         # *********** payload ***********
         # [0] – filename, e.g. testfile.txt
-        # [1] – username, e.g. john_doe (NOT REQUIRED IN THIS VERSION)
+        # [1] – username, e.g. john_doe, everyone
         elif type == Log.Event.DELETE:
-            suc = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " DELETE User john_doe deleted file " + payload[0] + ".\n"
-            err = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " DELETE ERROR User john_doe failed to delete file " + payload[0] + " with error " + str(status) + ".\n"
+            suc = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " DELETE User " + payload[1] + " deleted file " + payload[0] + ".\n"
+            err = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " DELETE ERROR User " + payload[1] + " failed to delete file " + payload[0] + " with error " + str(status) + ".\n"
             # SUCESS
             if status == 0: Log.write(suc)
             # ERROR
