@@ -5,7 +5,7 @@
 from multiprocessing import Event
 from pathlib import Path
 import datetime
-import enum
+from enum import Enum
 
 
 class Log:
@@ -13,7 +13,7 @@ class Log:
     LOG_FOLDER = Path("server/_data/logs/")
 
     # Posible events
-    class Event(enum):
+    class Event(Enum):
         UPLOAD = 1
         DOWNLOAD = 2
         DELETE = 3
@@ -34,8 +34,8 @@ class Log:
         # [0] – filename, e.g. testfile.txt
         # [1] – username, e.g. john_doe (NOT REQUIRED IN THIS VERSION)
         if type == Log.Event.UPLOAD:
-            suc = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " " + type + " User john_doe uploaded file " + payload[0] + ".\n"
-            err = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " " + type + " ERROR User john_doe failed to upload file " + payload[0] + " with error " + str(status) + ".\n"
+            suc = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " UPLOAD User john_doe uploaded file " + payload[0] + ".\n"
+            err = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " UPLOAD ERROR User john_doe failed to upload file " + payload[0] + " with error " + str(status) + ".\n"
             # SUCESS
             if status == 0: Log.write(suc)
             # ERROR
@@ -46,8 +46,8 @@ class Log:
         # [0] – filename, e.g. testfile.txt
         # [1] – username, e.g. john_doe (NOT REQUIRED IN THIS VERSION)
         elif type == Log.Event.DOWNLOAD:
-            suc = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " " + type + " User john_doe downloaded file " + payload[0] + ".\n"
-            err = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " " + type + " ERROR User john_doe failed to download file " + payload[0] + " with error " + str(status) + ".\n"
+            suc = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " DOWNLOAD User john_doe downloaded file " + payload[0] + ".\n"
+            err = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " DOWNLOAD ERROR User john_doe failed to download file " + payload[0] + " with error " + str(status) + ".\n"
             # SUCESS
             if status == 0: Log.write(suc)
             # ERROR
@@ -58,8 +58,8 @@ class Log:
         # [0] – filename, e.g. testfile.txt
         # [1] – username, e.g. john_doe (NOT REQUIRED IN THIS VERSION)
         elif type == Log.Event.DELETE:
-            suc = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " " + type + " User john_doe deleted file " + payload[0] + ".\n"
-            err = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " " + type + " ERROR User john_doe failed to delete file " + payload[0] + " with error " + str(status) + ".\n"
+            suc = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " DELETE User john_doe deleted file " + payload[0] + ".\n"
+            err = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " DELETE ERROR User john_doe failed to delete file " + payload[0] + " with error " + str(status) + ".\n"
             # SUCESS
             if status == 0: Log.write(suc)
             # ERROR
