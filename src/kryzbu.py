@@ -5,7 +5,6 @@
 # as a standard command-line tool from everywhere.
 
 import argparse
-from ast import arg
 from client import client
 
 parser = argparse.ArgumentParser()

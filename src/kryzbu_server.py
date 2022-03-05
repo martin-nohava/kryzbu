@@ -9,4 +9,3 @@ from server import server
 
 print('[*] Kryzbu server started...')
 server.Server.run()
-print('[*] Kryzbu server ended...')

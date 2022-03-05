@@ -80,7 +80,7 @@ class Server:
                     break
                 f.write(bytes_read)
         # Logs event type 'UPLOAD', with sucess 0, and payload with file name
-        Log.event('UPLOAD', 0, [file_name])
+        Log.event(Log.Event.UPLOAD, 0, [file_name])
         File_index.add(file_name)
 
 
@@ -103,7 +103,7 @@ class Server:
                         break
                     conn.send(bytes_read)
 
-            Log.event('DOWNLOAD', 0, [file_name])
+            Log.event(Log.Event.DOWNLOAD, 0, [file_name])
             File_index.download(file_name)
         else:
             # Requested file does NOT exist
@@ -118,7 +118,7 @@ class Server:
 
         if os.path.exists(file_path):
             os.remove(file_path)
-            Log.event('DELETE', 0, [file_name])
+            Log.event(Log.Event.DELETE, 0, [file_name])
             File_index.delete(file_name)
             conn.send(f"SUCCESS;fileDeleted;{file_name}".encode())
         else:
