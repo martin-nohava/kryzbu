@@ -179,12 +179,12 @@ class Client:
         # Check if config file exists
         if os.path.exists(Client.USER_CONF):
             # Check required user data are filled in
-            f = open(Client.USER_CONF, 'r')
-            lines = f.read()
-            for ex in required:
-                if not re.search(ex, lines):
-                    Client.login()
-                    return
+            with open(Client.USER_CONF, 'r') as f:
+                lines = f.read()
+                for ex in required:
+                    if not re.search(ex, lines):
+                        Client.login()
+                        return
         # Else create file and ask for data
         else:
             Client.login()
