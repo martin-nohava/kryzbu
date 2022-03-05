@@ -5,7 +5,7 @@ import socket
 import pickle
 from pathlib import Path
 from .loglib import Log
-from .db import File_index
+from .db import File_index, User_db
 
 
 class Server:
@@ -66,6 +66,11 @@ class Server:
         # Initiate file index
         File_index.init(Server.SERVER_FOLDER)
         
+        #Initiate user database
+        User_db.init()
+
+        print('[*] Kryzbu server started successfully...')
+
 
     @staticmethod
     def recieve_file(file_name: str, conn: socket.socket):
