@@ -14,39 +14,42 @@ class Client:
 
 
     @staticmethod
-
     def upload(file_path: str):
         """Upload file to a server."""
 
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
-            try:
-                client.connect((Client.SERVER_IP, Client.SERVER_PORT))
-            except ConnectionRefusedError as e:
-                print(e)
-                print("Server probably isn't running!!!")
-                exit(1)
+        if os.path.exists(file_path):
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
+                try:
+                    client.connect((Client.SERVER_IP, Client.SERVER_PORT))
+                except ConnectionRefusedError as e:
+                    print(e)
+                    print("Server probably isn't running!!!")
+                    exit(1)
 
-            file_name = os.path.basename(file_path)
+                file_name = os.path.basename(file_path)
 
-            # Send UPLOAD request
-            client.send(f"UPLOAD;{file_name}".encode())
+                # Send UPLOAD request
+                client.send(f"UPLOAD;{file_name}".encode())
 
-            # Initialize progress bar
+                # Initialize progress bar
 
-            file_size = os.path.getsize(file_path)
+                file_size = os.path.getsize(file_path)
 
-            progress = tqdm.tqdm(range(file_size), f"Sending {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
+                progress = tqdm.tqdm(range(file_size), f"Sending {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
 
-            # Send file
-            with open(file_path, "rb") as f:
-                while True:
-                    bytes_read = f.read(Client.BUFFER_SIZE)
-                    if not bytes_read:
-                        break
-                    client.sendall(bytes_read)
-                    progress.update(len(bytes_read))
+                # Send file
+                with open(file_path, "rb") as f:
+                    while True:
+                        bytes_read = f.read(Client.BUFFER_SIZE)
+                        if not bytes_read:
+                            break
+                        client.sendall(bytes_read)
+                        progress.update(len(bytes_read))
 
-            client.close()
+                client.close()
+        else:
+            print(f"File '{file_path}' can't be reached, No action taken...")
+            print(f"Check correct file name and path and try again ")
 
 
     @staticmethod
@@ -113,8 +116,6 @@ class Client:
                 print(f"File '{file_name}' does NOT exist, CANNOT remove")
                 print("Available files:")
                 Client.list_files()
-            else:
-                print('donow')
 
             client.close()
 
@@ -151,5 +152,3 @@ class Client:
                         print(row[0], end='\t')
                 else:
                     print ('Nothing here')
-
-
