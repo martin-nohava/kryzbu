@@ -1,14 +1,17 @@
 from pathlib import Path
 from .loglib import Log
+from enum import Enum
 import datetime
 import sqlite3
 import os
 
 
 class User_db():
-    """Database of users registered in Kryzbu server."""
+    """Database of users registered in Kryzbu server.
+    Content of table: username, SHA256(password || salt), public_key, secret"""
 
     FOLDER = Path("server/_data")
+    TABLE_NAME = 'users'
     NAME = 'users.db'
 
     @staticmethod
@@ -16,9 +19,9 @@ class User_db():
         """Initialize user database while server starting."""
         
         if not User_db.table_exists():
-            con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
+            con = sqlite3.connect(User_db.FOLDER / User_db.NAME)
             cur = con.cursor()
-            cur.execute("CREATE TABLE users (username text, pass_hash text, pub_key text, secret text)")
+            cur.execute(f"CREATE TABLE {User_db.TABLE_NAME} (name text, pass_hash text, pub_key text, secret text)")
             print("WARNING, User_db: No table found, empty one created")
             con.commit()
             con.close()
@@ -28,40 +31,59 @@ class User_db():
     def add(user_name: str, pass_hash: str, pub_key: str, secret: str):
         """Add new user to database."""
 
-        con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
+        con = sqlite3.connect(User_db.FOLDER / User_db.NAME)
         cur = con.cursor()
-        cur.execute("INSERT INTO users VALUES (?,?,?,?)", (user_name, pass_hash, pub_key, secret))
+        cur.execute(f"INSERT INTO {User_db.TABLE_NAME} VALUES (?,?,?,?)", (user_name, pass_hash, pub_key, secret))
         print(f"INFO, User_db: New user successfully added, name: {user_name}")
-        User_db.show_all()
+        # TODO: add Log event
         con.commit()
         con.close()
+
+
+    @staticmethod
+    def delete(user_name: str):
+        """Delete user."""
+
+        Database.delete(Database.Table.USER_DB, user_name)
+        print(f"INFO, User_db: User successfully deleted, name: {user_name}")
+        # TODO: add Log event
+
+    
+    @staticmethod
+    def get_record(user_name: str):
+        """Get info about specific username"""
+
+        return Database.get_record(Database.Table.USER_DB, user_name)
+
+
+    @staticmethod
+    def return_all():
+        """Return all user table"""
+
+        return Database.return_all(Database.Table.USER_DB)
 
 
     @staticmethod
     def show_all():
         """Print out all table."""
 
-        con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
-        cur = con.cursor()
-        for row in cur.execute("SELECT * FROM users"):
-            print(row)
-        con.close()
+        Database.show_all(Database.Table.USER_DB)
 
 
     @staticmethod
     def table_exists() -> bool:
         """Check if User already exists or not."""
 
-        return Database.table_exists("users")
+        return Database.table_exists(Database.Table.USER_DB)
 
 
 class File_index():
     """Database for indexing files saved in Kryzbu server storage. 
     Content of table: name, owner, date of upload, number of downloads.
-    Table was created with: CREATE TABLE file_index (name text, owner text, uploaded date, downloads int)
     """
 
     FOLDER = Path("server/_data/")
+    TABLE_NAME = 'file_index'
     NAME = 'files.db'
 
 
@@ -72,8 +94,8 @@ class File_index():
         if not File_index.table_exists():
             con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
             cur = con.cursor()
-            cur.execute("CREATE TABLE file_index (name text, owner text, uploaded date, downloads int)")
-            print(f"WARNING, File_index: No table found, empty one created")
+            cur.execute(f"CREATE TABLE {File_index.TABLE_NAME} (name text, owner text, uploaded date, downloads int)")
+            print("WARNING, File_index: No table found, empty one created")
             con.commit()
             con.close()
 
@@ -87,7 +109,7 @@ class File_index():
 
         con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
         cur = con.cursor()
-        cur.execute("INSERT INTO file_index VALUES (?,?,?,?)", (file_name, 'everyone', datetime.datetime.now().strftime("%m/%d/%Y"), 0))
+        cur.execute(f"INSERT INTO {File_index.TABLE_NAME} VALUES (?,?,?,?)", (file_name, 'everyone', datetime.datetime.now().strftime("%m/%d/%Y"), 0))
         con.commit()
         con.close()
 
@@ -98,7 +120,7 @@ class File_index():
         
         con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
         cur = con.cursor()
-        cur.execute("SELECT downloads FROM file_index WHERE name=:name", {"name": file_name})
+        cur.execute(f"SELECT downloads FROM {File_index.TABLE_NAME} WHERE name=:name", {"name": file_name})
         cur.execute("UPDATE file_index SET downloads=? WHERE name=?", (cur.fetchone()[0] + 1, file_name))
         con.commit()
         con.close()
@@ -108,11 +130,7 @@ class File_index():
     def delete(file_name: str):
         """Remove file record."""
 
-        con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
-        cur = con.cursor()
-        cur.execute("DELETE FROM file_index WHERE name=:name", {"name": file_name})
-        con.commit()
-        con.close()     
+        Database.delete(Database.Table.FILE_INDEX, file_name)    
 
             
     @staticmethod
@@ -145,58 +163,112 @@ class File_index():
     def show_all():
         """Print out all table."""
 
-        con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
-        cur = con.cursor()
-        for row in cur.execute("SELECT * FROM file_index"):
-            print(row)
-        con.close()
+        Database.show_all(Database.Table.FILE_INDEX)
 
     
     @staticmethod
     def return_all() -> list:
         """Return all data."""
 
-        list = []
-        con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
-        cur = con.cursor()
-        try:
-            for row in cur.execute("SELECT * FROM file_index"):
-                list.append(row)
-            con.close()
-        except:
-            print('WARNING: File database empty!')
-        return list
+        return Database.return_all(Database.Table.FILE_INDEX)
 
 
     @staticmethod
     def get_record(file_name: str):
         """Get info about file."""
 
-        con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
-        cur = con.cursor()
-        cur.execute("SELECT * FROM file_index WHERE name=:name", {"name": file_name})
-        record = cur.fetchone()
-        con.close()
-        return record
+        return Database.get_record(Database.Table.FILE_INDEX, file_name)        
 
 
     @staticmethod
     def table_exists() -> bool:
-        """Check if File_index already exists or not."""
+        """Check if file_index already exists or not."""
 
-        return Database.table_exists("file_index")
+        return Database.table_exists(Database.Table.FILE_INDEX)
 
 
 class Database:
     """Functions implementacion that are shared between all databases."""
 
-    @staticmethod
-    def table_exists(table: str) -> bool:
-        """Check if File_index already exists or not."""
+    class Table(Enum):
+        USER_DB = User_db.TABLE_NAME
+        FILE_INDEX = File_index.TABLE_NAME
 
-        con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
+
+    @staticmethod
+    def delete(table: Table, name: str):
+        """Delete record from specified table"""
+
+        if table == Database.Table.FILE_INDEX:
+            con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
+        else:
+            con = sqlite3.connect(User_db.FOLDER / User_db.NAME)
         cur = con.cursor()
-        cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=:name", {"name": table})
+        cur.execute(f"DELETE FROM {table.value} WHERE name=:name", {"name": name})
+        con.commit()
+        con.close() 
+
+
+    @staticmethod
+    def get_record(table: Table, name):
+        """Get record from specified table."""
+
+        if table == Database.Table.FILE_INDEX:
+            con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
+        else:
+            con = sqlite3.connect(User_db.FOLDER / User_db.NAME)
+        cur = con.cursor()
+        cur.execute(f"SELECT * FROM {table.value} WHERE name=:name", {"name": name}) # TODO: Posible sql injection
+        record = cur.fetchone()
+        con.close()
+        return record
+
+    
+    @staticmethod
+    def return_all(table: Table) -> list:
+        """Return all data from specified table."""
+
+        if table == Database.Table.FILE_INDEX:
+            con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
+        else:
+            con = sqlite3.connect(User_db.FOLDER / User_db.NAME)
+        cur = con.cursor()
+        
+        list = []
+        try:
+            for row in cur.execute(f"SELECT * FROM {table.value}"): # TODO: Posible sql injection
+                list.append(row)
+            con.close()
+        except:
+            print('WARNING: File database empty!')
+        return list
+
+    
+    @staticmethod
+    def show_all(table: Table):
+        """Print out whole table."""
+
+        if table == Database.Table.FILE_INDEX:
+            con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
+        else:
+            con = sqlite3.connect(User_db.FOLDER / User_db.NAME)
+        cur = con.cursor()
+
+        for row in cur.execute(f"SELECT * FROM {table.value}"):
+            print(row)
+        con.close()
+
+
+    @staticmethod
+    def table_exists(table: Table) -> bool:
+        """Check if table exists or not."""
+
+        if table == Database.Table.FILE_INDEX:
+            con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
+        else:
+            con = sqlite3.connect(User_db.FOLDER / User_db.NAME)
+        cur = con.cursor()
+        cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=:name", {"name": table.value})
         if  cur.fetchone():
             con.close()
             return True
