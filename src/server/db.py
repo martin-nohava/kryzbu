@@ -5,6 +5,56 @@ import sqlite3
 import os
 
 
+class User_db():
+    """Database of users registered in Kryzbu server."""
+
+    FOLDER = Path("server/_data")
+    NAME = 'users.db'
+
+    @staticmethod
+    def init():
+        """Initialize user database while server starting."""
+        
+        if not User_db.table_exists():
+            con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
+            cur = con.cursor()
+            cur.execute("CREATE TABLE users (username text, pass_hash text, pub_key text, secret text)")
+            print("WARNING, User_db: No table found, empty one created")
+            con.commit()
+            con.close()
+
+    
+    @staticmethod
+    def add(user_name: str, pass_hash: str, pub_key: str, secret: str):
+        """Add new user to database."""
+
+        con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
+        cur = con.cursor()
+        cur.execute("INSERT INTO users VALUES (?,?,?,?)", (user_name, pass_hash, pub_key, secret))
+        print(f"INFO, User_db: New user successfully added, name: {user_name}")
+        User_db.show_all()
+        con.commit()
+        con.close()
+
+
+    @staticmethod
+    def show_all():
+        """Print out all table."""
+
+        con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
+        cur = con.cursor()
+        for row in cur.execute("SELECT * FROM users"):
+            print(row)
+        con.close()
+
+
+    @staticmethod
+    def table_exists() -> bool:
+        """Check if User already exists or not."""
+
+        return Database.table_exists("users")
+
+
 class File_index():
     """Database for indexing files saved in Kryzbu server storage. 
     Content of table: name, owner, date of upload, number of downloads.
@@ -23,6 +73,7 @@ class File_index():
             con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
             cur = con.cursor()
             cur.execute("CREATE TABLE file_index (name text, owner text, uploaded date, downloads int)")
+            print(f"WARNING, File_index: No table found, empty one created")
             con.commit()
             con.close()
 
@@ -133,9 +184,19 @@ class File_index():
     def table_exists() -> bool:
         """Check if File_index already exists or not."""
 
+        return Database.table_exists("file_index")
+
+
+class Database:
+    """Functions implementacion that are shared between all databases."""
+
+    @staticmethod
+    def table_exists(table: str) -> bool:
+        """Check if File_index already exists or not."""
+
         con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
         cur = con.cursor()
-        cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='file_index'")
+        cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=:name", {"name": table})
         if  cur.fetchone():
             con.close()
             return True
