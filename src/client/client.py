@@ -8,7 +8,7 @@ import uuid
 import tqdm
 import socket
 import pickle
-
+import getpass
 
 class Client:
     """Implementation of a Kryzbu client."""
@@ -192,15 +192,24 @@ class Client:
     @staticmethod
     def login():
         print('INFO: No user account found! Please login first.')
-        print('Username:', end=' ')
-        username = str(input())
-        print('Password:', end=' ')
-        password = str(input())
-        salt = uuid.uuid4().hex
-        with open(Client.USER_CONF, "w") as f:
-                f.write('USERNAME=%s\nPASSWORD=%s\nSALT=%s' %(username, str(hashlib.sha256(salt.encode() + password.encode()).hexdigest()), salt))
-        print('INFO: You are now logged in as ' + username)
-        return
+        for i in range(3):
+            print('Username:', end=' ')
+            username = str(input())
+            password = getpass.getpass()
+            passwordCheck = getpass.getpass()
+            if password == passwordCheck:
+                salt = uuid.uuid4().hex
+                with open(Client.USER_CONF, "w") as f:
+                        f.write('USERNAME=%s\nPASSWORD=%s\nSALT=%s' %(username, str(hashlib.sha256(salt.encode() + password.encode()).hexdigest()), salt))
+                print('INFO: You are now logged in as ' + username)
+                return
+            else:
+                print("Passwords does not match! ")
+                print("Try again!")
+        print("You failed 3 times, get the fuck out")
+
+
+
     
     @staticmethod
     def info():
@@ -227,5 +236,5 @@ class Client:
 
     @staticmethod
     def change_user():
-        os.remove(Client.USER_CONF)
+        # os.remove(Client.USER_CONF)
         Client.login()
