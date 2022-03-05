@@ -77,18 +77,28 @@ class Client:
                 exit(1)
 
             # Send DOWNLOAD request
-            client.send(f"DOWNLOAD;{file_name}".encode())
+            client.send(f"DOWNLOAD;{file_name};{Client.get_username()}".encode())
 
             # Receive aswer
             answer = client.recv(Client.BUFFER_SIZE).decode()
-            if 'ERROR' in answer:
+            # Answer: 'OK;Authenticated' or 'ERROR;FileNotFoundError' or 'ERROR;NotAuthenticatedError'
+            if 'OK' in answer:
+                file_info = client.recv(Client.BUFFER_SIZE).decode()
+                file_name, file_size = file_info.split(';')
+            elif 'FileNotFoundError' in answer:
                 print(f"File '{file_name}' does NOT exist, CANNOT download")
                 print("Available files:")
                 Client.list_files(detailed=False)
                 client.close()
                 return
+            elif 'NotAuthenticatedError' in answer:
+                print(f"User '{Client.get_username()}' can't be authenticated, CANNOT downdload")
+                client.close()
+                return
             else:
-                file_name, file_size = answer.split(';')
+                print("Unknown exeption")
+                client.close()
+                return         
 
             progress = tqdm.tqdm(range(int(file_size)), f"Receiving {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
 
@@ -117,17 +127,25 @@ class Client:
                 exit(1)
 
             # Send REMOVE request
-            client.send(f"REMOVE;{file_name}".encode())
+            client.send(f"REMOVE;{file_name};{Client.get_username()}".encode())
 
             # Receive answer
             answer = client.recv(Client.BUFFER_SIZE).decode()
-            if 'SUCCESS' in answer:
-                print(f"File '{file_name}' successfully removed")
-            elif 'ERROR' in answer:
+            # Answer: 'OK;Authenticated' or 'ERROR;FileNotFoundError' or 'ERROR;NotAuthenticatedError'
+            if 'OK' in answer:
+                delete_info = client.recv(Client.BUFFER_SIZE).decode()
+                if 'FileDeleted' in delete_info:
+                    # Message: 'OK;FileDeleted'
+                    print(f"File '{file_name}' successfully removed")
+            elif 'FileNotFoundError' in answer:
                 # FileNotFound error
                 print(f"File '{file_name}' does NOT exist, CANNOT remove")
                 print("Available files:")
                 Client.list_files(detailed=False)
+            elif 'NotAuthenticatedError' in answer:
+                print(f"User '{Client.get_username()}' can't be authenticated, CANNOT remove")
+            else:
+                print("Unknown exeption")
 
             client.close()
 

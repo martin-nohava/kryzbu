@@ -34,15 +34,15 @@ class Server:
                 if 'UPLOAD' in request:
                     # Request to upload file, structure: 'UPLOAD FILENAME USERNAME'
                     _, file_name, user_name = request.split(';')
-                    Server.recieve_file(file_name, conn, user_name)
+                    Server.recieve_file(file_name, user_name, conn)
                 elif 'DOWNLOAD' in request:
-                    # Request to download file, structure: 'DOWNLOAD FILENAME'
-                    _, file_name = request.split(';')
-                    Server.serve_file(file_name, conn)
+                    # Request to download file, structure: 'DOWNLOAD FILENAME USERNAME'
+                    _, file_name, user_name = request.split(';')
+                    Server.serve_file(file_name, user_name, conn)
                 elif 'REMOVE' in request:
-                    # Request to delete file, structure: 'REMOVE FILENAME'
-                    _, file_name = request.split(';')
-                    Server.remove_file(file_name, conn)
+                    # Request to delete file, structure: 'REMOVE FILENAME USERNAME'
+                    _, file_name, user_name = request.split(';')
+                    Server.remove_file(file_name, user_name, conn)
                 elif 'LIST_DIR' in request:
                     # Request to list available file for download, structure: 'LIST_DIR'
                     Server.list_files(conn)
@@ -50,6 +50,7 @@ class Server:
                     conn.send('UN-KNOWN request, use \{UPLOAD, DOWNLOAD, LIST_DIR\}'.encode())
 
                 conn.close()
+
 
     @staticmethod
     def init() -> None:
@@ -73,12 +74,11 @@ class Server:
 
 
     @staticmethod
-    def recieve_file(file_name: str, conn: socket.socket, user_name: str):
+    def recieve_file(file_name: str, user_name: str, conn: socket.socket):
         """Receive file from a client."""
 
         if User_db.name_exists(user_name):
             # User authenticated based on username
-
             conn.send("OK;Authenticated".encode())
             
             file_path = Server.SERVER_FOLDER / file_name
@@ -96,47 +96,63 @@ class Server:
             # User not-authenticated
             conn.send("ERROR;NotAuthenticated".encode())
 
+
     @staticmethod
-    def serve_file(file_name: str, conn: socket.socket):
+    def serve_file(file_name: str, user_name: str, conn: socket.socket):
         """Send file to a client."""
 
-        file_path = os.path.join(Server.SERVER_FOLDER, file_name)
+        if User_db.name_exists(user_name):
+            # User authenticated based on username
+            file_path = os.path.join(Server.SERVER_FOLDER, file_name)
 
-        if os.path.exists(file_path):
-            # Send file info
-            file_size = os.path.getsize(file_path)
-            conn.send(f"{file_name};{file_size}".encode())
+            if os.path.exists(file_path):
+                # Inform client about authentication
+                conn.send("OK;Authenticated".encode())
+                
+                # Send file info
+                file_size = os.path.getsize(file_path)
+                conn.send(f"{file_name};{file_size}".encode())
 
-            # Send file
-            with open(file_path, "rb") as f:
-                while True:
-                    bytes_read = f.read(Server.BUFFER_SIZE)
-                    if not bytes_read:
-                        break
-                    conn.send(bytes_read)
+                # Send file
+                with open(file_path, "rb") as f:
+                    while True:
+                        bytes_read = f.read(Server.BUFFER_SIZE)
+                        if not bytes_read:
+                            break
+                        conn.send(bytes_read)
 
-            Log.event(Log.Event.DOWNLOAD, 0, [file_name, 'everyone'])
-            File_index.download(file_name)
+                Log.event(Log.Event.DOWNLOAD, 0, [file_name, user_name])
+                File_index.download(file_name)
+            else:
+                # Requested file does NOT exist
+                conn.send("ERROR;FileNotFoundError".encode())
         else:
-            # Requested file does NOT exist
-            conn.send("ERROR;FILE_NOT_FOUND".encode())
+            # User not-authenticated
+            conn.send("ERROR;NotAuthenticatedError".encode())
 
 
     @staticmethod
-    def remove_file(file_name: str, conn: socket.socket):
+    def remove_file(file_name: str, user_name: str, conn: socket.socket):
         """Remove file."""
 
-        file_path = os.path.join(Server.SERVER_FOLDER, file_name)
+        if User_db.name_exists(user_name):
+            # User authenticated based on username
+            file_path = os.path.join(Server.SERVER_FOLDER, file_name)
 
-        if os.path.exists(file_path):
-            os.remove(file_path)
-            Log.event(Log.Event.DELETE, 0, [file_name, 'everyone'])
-            File_index.delete(file_name)
-            conn.send(f"SUCCESS;fileDeleted;{file_name}".encode())
+            if os.path.exists(file_path):
+                # Inform client about authentication
+                conn.send("OK;Authenticated".encode())
+
+                os.remove(file_path)
+                Log.event(Log.Event.DELETE, 0, [file_name, user_name])
+                File_index.delete(file_name)
+                conn.send(f"OK;FileDeleted;{file_name}".encode())
+            else:
+                # Requested file does NOT exist
+                conn.send("ERROR;FileNotFoundError".encode())
         else:
-            # Requested file does NOT exist
-            conn.send("ERROR;FILE_NOT_FOUND".encode())
-
+            #User not_authenticated
+            conn.send("ERROR;NotAuthenticatedError".encode())
 
     @staticmethod
     def list_files(conn: socket.socket):
