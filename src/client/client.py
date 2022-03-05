@@ -35,12 +35,18 @@ class Client:
                 file_name = os.path.basename(file_path)
 
                 # Send UPLOAD request
-                client.send(f"UPLOAD;{file_name}".encode())
+                client.send(f"UPLOAD;{file_name};{Client.get_username()}".encode())
+
+                # Receive aswer
+                answer = client.recv(Client.BUFFER_SIZE).decode()
+                # answer: 'OK;Authenticated' or 'ERROR;NotAuthenticated'
+                if 'NotAuthenticated' in answer:
+                    print(f"User '{Client.get_username()}' can't be authenticated, CANNOT upload")
+                    client.close()
+                    return
 
                 # Initialize progress bar
-
                 file_size = os.path.getsize(file_path)
-
                 progress = tqdm.tqdm(range(file_size), f"Sending {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
 
                 # Send file

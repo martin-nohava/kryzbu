@@ -57,6 +57,22 @@ class User_db():
 
 
     @staticmethod
+    def name_exists(user_name: str) -> bool:
+        """Check if there is the specified username in user database."""
+
+        con = sqlite3.connect(User_db.FOLDER / User_db.NAME)
+        cur = con.cursor()
+        cur.execute(f"SELECT name FROM {User_db.TABLE_NAME} WHERE name=:name", {"name": user_name})
+        if cur.fetchone():
+            cur.close()
+            return True
+        else:
+            cur.close()
+            return False
+
+
+
+    @staticmethod
     def return_all():
         """Return all user table"""
 
@@ -104,12 +120,12 @@ class File_index():
    
 
     @staticmethod
-    def add(file_name: str):
+    def add(file_name: str, user_name):
         """Add new file index to database."""
 
         con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
         cur = con.cursor()
-        cur.execute(f"INSERT INTO {File_index.TABLE_NAME} VALUES (?,?,?,?)", (file_name, 'everyone', datetime.datetime.now().strftime("%m/%d/%Y"), 0))
+        cur.execute(f"INSERT INTO {File_index.TABLE_NAME} VALUES (?,?,?,?)", (file_name, user_name, datetime.datetime.now().strftime("%m/%d/%Y"), 0))
         con.commit()
         con.close()
 

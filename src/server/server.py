@@ -32,9 +32,9 @@ class Server:
                 request = conn.recv(1024).decode()
 
                 if 'UPLOAD' in request:
-                    # Request to upload file, structure: 'UPLOAD FILENAME'
-                    _, file_name = request.split(';')
-                    Server.recieve_file(file_name, conn)
+                    # Request to upload file, structure: 'UPLOAD FILENAME USERNAME'
+                    _, file_name, user_name = request.split(';')
+                    Server.recieve_file(file_name, conn, user_name)
                 elif 'DOWNLOAD' in request:
                     # Request to download file, structure: 'DOWNLOAD FILENAME'
                     _, file_name = request.split(';')
@@ -73,21 +73,28 @@ class Server:
 
 
     @staticmethod
-    def recieve_file(file_name: str, conn: socket.socket):
+    def recieve_file(file_name: str, conn: socket.socket, user_name: str):
         """Receive file from a client."""
 
-        file_path = Server.SERVER_FOLDER / file_name # Prepend storage path
+        if User_db.name_exists(user_name):
+            # User authenticated based on username
 
-        with open(file_path, "wb") as f:
-            while True:
-                bytes_read = conn.recv(Server.BUFFER_SIZE)
-                if not bytes_read:
-                    break
-                f.write(bytes_read)
-        # Logs event type 'UPLOAD', with sucess 0, and payload with file name
-        Log.event(Log.Event.UPLOAD, 0, [file_name, 'everyone'])
-        File_index.add(file_name)
+            conn.send("OK;Authenticated".encode())
+            
+            file_path = Server.SERVER_FOLDER / file_name
 
+            with open(file_path, "wb") as f:
+                while True:
+                    bytes_read = conn.recv(Server.BUFFER_SIZE)
+                    if not bytes_read:
+                        break
+                    f.write(bytes_read)
+            
+            Log.event(Log.Event.UPLOAD, 0, [file_name, user_name])
+            File_index.add(file_name, user_name)
+        else:
+            # User not-authenticated
+            conn.send("ERROR;NotAuthenticated".encode())
 
     @staticmethod
     def serve_file(file_name: str, conn: socket.socket):
