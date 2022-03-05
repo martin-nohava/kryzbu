@@ -1,6 +1,10 @@
 # Client side
 
+import hashlib
 import os
+import re
+from pathlib import Path
+import uuid
 import tqdm
 import socket
 import pickle
@@ -12,6 +16,7 @@ class Client:
     BUFFER_SIZE = 4096
     SERVER_IP = "127.0.0.1"
     SERVER_PORT = 60606
+    USER_CONF = Path('client/_data/config/user.conf')
 
 
     @staticmethod
@@ -153,3 +158,74 @@ class Client:
                         print(row[0], end='\t')
                 else:
                     print ('Nothing here')
+
+    @staticmethod
+    def init() -> None:
+        """Checks user information and folder structure."""
+
+        PATHS = (
+        'client/_data/config/',
+        )
+        for path in PATHS:
+            # Any missing parents of this path are created as needed, if folder already exists nothing happens
+            Path(path).mkdir(parents=True, exist_ok=True)
+        
+        # Before any action can be taken user has to be loged in
+        Client.user_exists()
+
+    @staticmethod
+    def user_exists():
+        required = ('USERNAME=.+', 'PASSWORD=.+', 'SALT=.+')
+        # Check if config file exists
+        if os.path.exists(Client.USER_CONF):
+            # Check required user data are filled in
+            f = open(Client.USER_CONF, 'r')
+            lines = f.read()
+            for ex in required:
+                if not re.search(ex, lines):
+                    Client.login()
+                    return
+        # Else create file and ask for data
+        else:
+            Client.login()
+
+    @staticmethod
+    def login():
+        print('INFO: No user account found! Please login first.')
+        print('Username:', end=' ')
+        username = str(input())
+        print('Password:', end=' ')
+        password = str(input())
+        salt = uuid.uuid4().hex
+        with open(Client.USER_CONF, "w") as f:
+                f.write('USERNAME=%s\nPASSWORD=%s\nSALT=%s' %(username, str(hashlib.sha256(salt.encode() + password.encode()).hexdigest()), salt))
+        print('INFO: You are now logged in as ' + username)
+        return
+    
+    @staticmethod
+    def info():
+        print('User account and client preferences information:\n')
+        # Check if user exists, create user
+        Client.user_exists()
+        # Display available info
+        f = open(Client.USER_CONF, 'r')
+        lines = f.readlines()
+        for line in lines:
+            items = line.split('=')
+            print(items[0] + ': ' + items[1], end='')
+    
+    @staticmethod
+    def get_username() -> str:
+        ex = 'USERNAME=.+'
+        f = open(Client.USER_CONF, 'r')
+        lines = f.readlines()
+        for line in lines:
+            result = re.match(ex, line)
+            if result:
+                break
+        return result.group().split('=')[1]
+
+    @staticmethod
+    def change_user():
+        os.remove(Client.USER_CONF)
+        Client.login()
