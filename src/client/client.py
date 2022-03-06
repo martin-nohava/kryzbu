@@ -1,6 +1,8 @@
 # Client side
 
+from distutils.command.clean import clean
 import hashlib
+import asyncio
 import os
 import re
 from pathlib import Path
@@ -17,52 +19,54 @@ class Client:
     SERVER_IP = "127.0.0.1"
     SERVER_PORT = 60606
     USER_CONF = Path('client/_data/config/user.conf')
+    EOM = '\n' # End of Message sign
 
 
     @staticmethod
-    def upload(file_path: str):
+    async def upload(file_path: str):
         """Upload file to a server."""
 
         if os.path.exists(file_path):
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
-                try:
-                    client.connect((Client.SERVER_IP, Client.SERVER_PORT))
-                except ConnectionRefusedError as e:
-                    print(e)
-                    print("Server probably isn't running!!!")
-                    exit(1)
+            try:
+                reader, writer = await asyncio.open_connection(Client.SERVER_IP, Client.SERVER_PORT)
+            except ConnectionRefusedError as e:
+                print(e)
+                print("Server probably ins't running!!!")
+                exit(1)
+ 
+            file_name = os.path.basename(file_path)
 
-                file_name = os.path.basename(file_path)
+            # Send UPLOAD request
+            writer.write(f"UPLOAD;{file_name};{Client.get_username()}{Client.EOM}".encode())
 
-                # Send UPLOAD request
-                client.send(f"UPLOAD;{file_name};{Client.get_username()}".encode())
+            # Receive aswer
+            data = await reader.readuntil(Client.EOM.encode())
+            answer = data.decode()
 
-                # Receive aswer
-                answer = client.recv(Client.BUFFER_SIZE).decode()
+            if 'OK' in answer:
+                # Answer: 'OK;Authenticated'
+                file_size = os.path.getsize(file_path)
+                progress = tqdm.tqdm(range(file_size), f"Sending {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
 
-                if 'OK' in answer:
-                    # Answer: 'OK;Authenticated'
+                # Send file
+                with open(file_path, "rb") as f:
+                    while True:
+                        bytes_read = f.read(Client.BUFFER_SIZE)
+                        if not bytes_read:
+                            break
+                        progress.update(len(bytes_read))
+                        writer.write(bytes_read)
+                        await writer.drain()
 
-                    file_size = os.path.getsize(file_path)
-                    progress = tqdm.tqdm(range(file_size), f"Sending {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
-
-                    # Send file
-                    with open(file_path, "rb") as f:
-                        while True:
-                            bytes_read = f.read(Client.BUFFER_SIZE)
-                            if not bytes_read:
-                                break
-                            client.sendall(bytes_read)
-                            progress.update(len(bytes_read))
-
-                elif 'NotAuthenticated' in answer:
-                    # Answer: 'ERROR;NotAuthenticated'
-                    print(f"User '{Client.get_username()}' can't be authenticated, CANNOT upload")
-                else:
-                    # Answer: Any
-                    print("client.py: Unknown exeption")
+            elif 'NotAuthenticated' in answer:
+                # Answer: 'ERROR;NotAuthenticated'
+                print(f"User '{Client.get_username()}' can't be authenticated, CANNOT upload")
+            else:
+                # Answer: Any
+                print("client.py: Unknown exeption")
             
-            client.close()
+            writer.close()
+            await writer.wait_closed()
 
         else:
             # Client FileNotFoundError
@@ -71,143 +75,147 @@ class Client:
 
 
     @staticmethod
-    def download(file_name: str):
+    async def download(file_name: str):
         """Download file from a server."""
 
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
-            try:
-                client.connect((Client.SERVER_IP, Client.SERVER_PORT))
-            except ConnectionRefusedError as e:
-                print(e)
-                print("Server probably ins't running!!!")
-                exit(1)
+        try:
+            reader, writer = await asyncio.open_connection(Client.SERVER_IP, Client.SERVER_PORT)
+        except ConnectionRefusedError as e:
+            print(e)
+            print("Server probably ins't running!!!")
+            exit(1)
 
-            # Send DOWNLOAD request
-            client.send(f"DOWNLOAD;{file_name};{Client.get_username()}".encode())
+        # Send DOWNLOAD request
+        writer.write(f"DOWNLOAD;{file_name};{Client.get_username()}{Client.EOM}".encode())
 
-            # Receive aswer: 'OK;Authenticated' or 'ERROR;FileNotFoundError' or 'ERROR;NotAuthenticatedError'
-            answer = client.recv(Client.BUFFER_SIZE).decode()
+        # Receive aswer: 'OK;Authenticated' or 'ERROR;FileNotFoundError' or 'ERROR;NotAuthenticatedError'
+        data = await reader.readuntil(Client.EOM.encode())
+        answer = data.decode()[:-1] # Decode and strip EOM symbol
 
-            if 'OK' in answer:
-                # Answer: 'OK;Authenticated'
-                file_info = client.recv(Client.BUFFER_SIZE).decode()
-                file_name, file_size = file_info.split(';')
+        if 'OK' in answer:
+            # Answer: 'OK;Authenticated'
+            data = await reader.readuntil(Client.EOM.encode())
+            file_info = data.decode()[:-1] # Decode and strip EOM symbol
+            file_name, file_size = file_info.split(';')
 
-                progress = tqdm.tqdm(range(int(file_size)), f"Receiving {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
+            progress = tqdm.tqdm(range(int(file_size)), f"Receiving {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
 
-                # Receive file
-                with open(str(os.path.join(os.path.expanduser('~/Downloads'), file_name)), "wb") as f:
-                    while True:
-                        bytes_read = client.recv(Client.BUFFER_SIZE)
-                        if not bytes_read:
-                            break
-                        f.write(bytes_read)
-                        progress.update(len(bytes_read))
+            # Receive file
+            with open(str(os.path.join(os.path.expanduser('~/Downloads'), file_name)), "wb") as f:
+                while True:
+                    bytes_read = await reader.read()
+                    if not bytes_read:
+                        break
+                    f.write(bytes_read)
+                    progress.update(len(bytes_read))
 
-            elif 'FileNotFoundError' in answer:
-                # Answer: 'ERROR;FileNotFoundError'
-                print(f"File '{file_name}' does NOT exist, CANNOT download")
-                print("Available files:")
-                Client.list_files(detailed=False)
+        elif 'FileNotFoundError' in answer:
+            # Answer: 'ERROR;FileNotFoundError'
+            print(f"File '{file_name}' does NOT exist, CANNOT download")
+            print("Check correct file name and try again")
 
-            elif 'NotAuthenticatedError' in answer:
-                # Answer: 'ERROR;NotAuthenticatedError'
-                print(f"User '{Client.get_username()}' can't be authenticated, CANNOT downdload")
+        elif 'NotAuthenticatedError' in answer:
+            # Answer: 'ERROR;NotAuthenticatedError'
+            print(f"User '{Client.get_username()}' can't be authenticated, CANNOT downdload")
 
-            else:
-                # Answer: Any
-                print("client.py: Unknown exeption")      
+        else:
+            # Answer: Any
+            print("client.py: Unknown exeption")      
 
-            client.close()
+        writer.close()
+        await writer.wait_closed()
 
 
     @staticmethod
-    def remove(file_name: str):
+    async def remove(file_name: str):
         """Remove file from a server."""
 
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
-            try:
-                client.connect((Client.SERVER_IP, Client.SERVER_PORT))
-            except ConnectionRefusedError as e:
-                print(e)
-                print("Server probably ins't running!!!")
-                exit(1)
+        try:
+            reader, writer = await asyncio.open_connection(Client.SERVER_IP, Client.SERVER_PORT)
+        except ConnectionRefusedError as e:
+            print(e)
+            print("Server probably ins't running!!!")
+            exit(1)
 
-            # Send REMOVE request
-            client.send(f"REMOVE;{file_name};{Client.get_username()}".encode())
+        # Send REMOVE request
+        writer.write(f"REMOVE;{file_name};{Client.get_username()}{Client.EOM}".encode())
 
-            # Receive answer: 'OK;Authenticated' or 'ERROR;FileNotFoundError' or 'ERROR;NotAuthenticatedError'
-            answer = client.recv(Client.BUFFER_SIZE).decode()
+        # Receive answer: 'OK;Authenticated' or 'ERROR;FileNotFoundError' or 'ERROR;NotAuthenticatedError'
+        data = await reader.readuntil(Client.EOM.encode())
+        answer = data.decode()[:-1]   # Decode and strip EOM symbol
 
-            if 'OK' in answer:
-                # Answer: 'OK;Authenticated'
-                delete_info = client.recv(Client.BUFFER_SIZE).decode()
-                if 'FileDeleted' in delete_info:
-                    # delete_info: 'OK;FileDeleted'
-                    print(f"File '{file_name}' successfully removed")
+        if 'OK' in answer:
+            # Answer: 'OK;Authenticated'
+            data = await reader.readuntil(Client.EOM.encode())
+            delete_info = data.decode()[:-1]   # Decode and strip EOM symbol
 
-            elif 'FileNotFoundError' in answer:
-                # Answer: 'ERROR;FileNotFoundError'
-                print(f"File '{file_name}' does NOT exist, CANNOT remove")
-                print("Available files:")
-                Client.list_files(detailed=False)
+            if 'FileDeleted' in delete_info:
+                # delete_info: 'OK;FileDeleted'
+                print(f"File '{file_name}' successfully removed")
 
-            elif 'NotAuthenticatedError' in answer:
-                # Answer: 'ERROR;NotAuthenticatedError'
-                print(f"User '{Client.get_username()}' can't be authenticated, CANNOT remove")
+        elif 'FileNotFoundError' in answer:
+            # Answer: 'ERROR;FileNotFoundError'
+            print(f"File '{file_name}' does NOT exist, CANNOT remove")
+            print("Check correct file name and try again")
 
-            else:
-                # Answer: Any
-                print("client.py: Unknown exeption")
+        elif 'NotAuthenticatedError' in answer:
+            # Answer: 'ERROR;NotAuthenticatedError'
+            print(f"User '{Client.get_username()}' can't be authenticated, CANNOT remove")
 
-            client.close()
+        else:
+            # Answer: Any
+            print("client.py: Unknown exeption")
+
+        writer.close()
+        await writer.wait_closed()
 
 
     @staticmethod
-    def list_files(detailed: bool):
+    async def list_files(detailed: bool):
         """List stored files on server. True: detailed view, False: basic view"""
 
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
-            try:
-                client.connect((Client.SERVER_IP, Client.SERVER_PORT))
-            except ConnectionRefusedError as e:
-                print(e)
-                print("Server probably ins't running!!!")
-                exit(1)
+        try:
+            reader, writer = await asyncio.open_connection(Client.SERVER_IP, Client.SERVER_PORT)
+        except ConnectionRefusedError as e:
+            print(e)
+            print("Server probably ins't running!!!")
+            exit(1)
 
-            # Send LIST_DIR request
-            client.send(f"LIST_DIR;{Client.get_username()}".encode())
+        # Send LIST_DIR request
+        writer.write(f"LIST_DIR;{Client.get_username()}{Client.EOM}".encode())
 
-            # Receive answer: 'OK;Authenticated' or 'ERROR;NotAuthenticatedError'
-            answer = client.recv(Client.BUFFER_SIZE).decode()
+        # Receive answer: 'OK;Authenticated' or 'ERROR;NotAuthenticatedError'
+        data = await reader.readuntil(Client.EOM.encode())
+        answer = data.decode()[:-1]   # Decode and strip EOM symbol
 
-            if 'OK' in answer:
-                # Answer: 'OK;Authenticated'
-                list = pickle.loads(client.recv(Client.BUFFER_SIZE))
-                if detailed:
-                    print ("{:<20} {:<15} {:<15} {:<15}".format('File','Owner','Created','Downloads'))
-                    print ("{:–<65}".format('–'))
-                    if len(list) != 0:
-                        for row in list:
-                            print ("{:<20} {:<15} {:<15} {:<15}".format(row[0], row[1], row[2], str(row[3])))
-                    else:
-                        print ("{:^65}".format('Nothing here'))
+        if 'OK' in answer:
+            # Answer: 'OK;Authenticated'
+            list = pickle.loads(await reader.read())
+            if detailed:
+                print ("{:<20} {:<15} {:<15} {:<15}".format('File','Owner','Created','Downloads'))
+                print ("{:–<65}".format('–'))
+                if len(list) != 0:
+                    for row in list:
+                        print ("{:<20} {:<15} {:<15} {:<15}".format(row[0], row[1], row[2], str(row[3])))
                 else:
-                    if len(list) != 0:
-                        for row in list:
-                            print(row[0], end='\t')
-                    else:
-                        print ('Nothing here')
-
-            elif 'NotAuthenticatedError' in answer:
-                # Answer: 'ERROR;NotAuthenticatedError'
-                print(f"User '{Client.get_username()}' can't be authenticated, CANNOT list files")
-                
+                    print ("{:^65}".format('Nothing here'))
             else:
-                # Answer: Any
-                print("client.py: Unknown exeption")
-                
-            client.close()
+                if len(list) != 0:
+                    for row in list:
+                        print(row[0], end='\t')
+                else:
+                    print ('Nothing here')
+
+        elif 'NotAuthenticatedError' in answer:
+            # Answer: 'ERROR;NotAuthenticatedError'
+            print(f"User '{Client.get_username()}' can't be authenticated, CANNOT list files")
+            
+        else:
+            # Answer: Any
+            print("client.py: Unknown exeption")
+            
+        writer.close()
+        await writer.wait_closed()
             
 
     @staticmethod

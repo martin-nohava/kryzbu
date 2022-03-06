@@ -5,6 +5,8 @@
 # as a standard command-line tool from everywhere.
 
 import argparse
+import asyncio
+from multiprocessing.connection import Client
 from client import client
 
 client.Client.init()
@@ -23,21 +25,21 @@ args = parser.parse_args()
 if args.upload:
     # Upload file to a server
     for file in args.upload:
-        client.Client.upload(file)
+        asyncio.run(client.Client.upload(file))
 elif args.download:
     # Download file from server
     for file in args.download:
-        client.Client.download(file)
+        asyncio.run(client.Client.download(file))
 elif args.remove:
     # Remove file from server
     for file in args.remove:
-        client.Client.remove(file)
+        asyncio.run(client.Client.remove(file))
 elif args.list:
     # List available files on server
-    client.Client.list_files(False)
+    asyncio.run(client.Client.list_files(False))
 elif args.listall:
     # List available files on server including additional info
-    client.Client.list_files(True)
+    asyncio.run(client.Client.list_files(True))
 elif args.info:
     # List available files on server including additional info
     client.Client.info()

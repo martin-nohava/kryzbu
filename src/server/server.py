@@ -1,13 +1,9 @@
 # Server side
 
-from asyncore import write
-from codecs import StreamWriter
 import os
-import socket
 import pickle
 import asyncio
 from pathlib import Path
-from urllib import request
 from .loglib import Log
 from .db import File_index, User_db
 
@@ -17,6 +13,7 @@ class Server:
 
     IP = "127.0.0.1"
     PORT = 60606
+    EOM = '\n' # End of Message sign, should be same as in client.py
     BUFFER_SIZE = 4096 # TODO: defined on two seperate places (in client.py as well)
     SERVER_FOLDER = Path("server/_data/files/") # Universal Path object for multi OS path declaration
 
@@ -45,8 +42,8 @@ class Server:
     async def handle_connection(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         """Asynch funcion for handling clients requests."""
 
-        data = await reader.read(Server.BUFFER_SIZE)
-        request = data.decode()
+        data = await reader.readuntil(Server.EOM.encode())
+        request = data.decode()[:-1]   # Decode and strip EOM symbol
 
         if 'UPLOAD' in request:
             # Request to upload file, structure: 'UPLOAD FILENAME USERNAME'
@@ -65,7 +62,7 @@ class Server:
             _, user_name = request.split(';')
             await Server.list_files(user_name, reader, writer)
         else:
-            writer.write('UN-KNOWN request, use \{UPLOAD, DOWNLOAD, LIST_DIR\}'.encode())
+            writer.write(f"UN-KNOWN request, use [UPLOAD, DOWNLOAD, LIST_DIR]{Server.EOM}".encode())
             await writer.drain()
 
         writer.close()
@@ -99,14 +96,14 @@ class Server:
 
         if User_db.name_exists(user_name):
             # User authenticated based on username
-            writer.write("OK;Authenticated".encode())
+            writer.write(f"OK;Authenticated{Server.EOM}".encode())
             await writer.drain()
             
             file_path = Server.SERVER_FOLDER / file_name
 
             with open(file_path, "wb") as f:
                 while True:
-                    bytes_read = await reader.read(Server.BUFFER_SIZE)
+                    bytes_read = await reader.read()
                     if not bytes_read:
                         break
                     f.write(bytes_read)
@@ -115,7 +112,7 @@ class Server:
             File_index.add(file_name, user_name)
         else:
             # User not-authenticated
-            writer.write("ERROR;NotAuthenticated".encode())
+            writer.write(f"ERROR;NotAuthenticated{Server.EOM}".encode())
             await writer.drain()
 
 
@@ -129,12 +126,12 @@ class Server:
 
             if os.path.exists(file_path):
                 # Inform client about authentication
-                writer.write("OK;Authenticated".encode())
+                writer.write(f"OK;Authenticated{Server.EOM}".encode())
                 await writer.drain()
                 
                 # Send file info
                 file_size = os.path.getsize(file_path)
-                writer.write(f"{file_name};{file_size}".encode())
+                writer.write(f"{file_name};{file_size}{Server.EOM}".encode())
                 await writer.drain()
 
 
@@ -151,10 +148,10 @@ class Server:
                 File_index.download(file_name)
             else:
                 # Requested file does NOT exist
-                writer.write("ERROR;FileNotFoundError".encode())
+                writer.write(f"ERROR;FileNotFoundError{Server.EOM}".encode())
         else:
             # User not-authenticated
-            writer.write("ERROR;NotAuthenticatedError".encode())
+            writer.write(f"ERROR;NotAuthenticatedError{Server.EOM}".encode())
 
 
     @staticmethod
@@ -167,18 +164,18 @@ class Server:
 
             if os.path.exists(file_path):
                 # Inform client about authentication
-                writer.write("OK;Authenticated".encode())
+                writer.write(f"OK;Authenticated{Server.EOM}".encode())
 
                 os.remove(file_path)
                 Log.event(Log.Event.DELETE, 0, [file_name, user_name])
                 File_index.delete(file_name)
-                writer.write(f"OK;FileDeleted;{file_name}".encode())
+                writer.write(f"OK;FileDeleted;{file_name}{Server.EOM}".encode())
             else:
                 # Requested file does NOT exist
-                writer.write("ERROR;FileNotFoundError".encode())
+                writer.write(f"ERROR;FileNotFoundError{Server.EOM}".encode())
         else:
             #User not_authenticated
-            writer.write("ERROR;NotAuthenticatedError".encode())
+            writer.write(f"ERROR;NotAuthenticatedError{Server.EOM}".encode())
 
     @staticmethod
     async def list_files(user_name:str, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
@@ -186,9 +183,9 @@ class Server:
         
         if User_db.name_exists(user_name):
             # User authenticated based on username
-            writer.write("OK;Authenticated".encode())
+            writer.write(f"OK;Authenticated{Server.EOM}".encode())
             # Send availabe files
             writer.write(pickle.dumps(File_index.return_all()))
         else:
             #User not_authenticated
-            writer.write("ERROR;NotAuthenticatedError".encode())
+            writer.write(f"ERROR;NotAuthenticatedError{Server.EOM}".encode())
