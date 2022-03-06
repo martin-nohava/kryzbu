@@ -19,6 +19,7 @@ class Log:
         DELETE = 3
         REGISTER = 4
         UNREGISTER = 5
+        ACCESS_DENIED = 6
 
 
     @staticmethod
@@ -88,7 +89,20 @@ class Log:
             # SUCESS
             if status == 0: Log.write(suc)
             # ERROR
-            else: Log.write(err)    
+            else: Log.write(err)
+
+        # ACCESS_DENIED: Access to resources denied, Unauthorized user
+        # *********** payload ***********
+        # [0] – resource
+        # [1] - username requested for access
+        # [2] - src socket
+        elif type == Log.Event.ACCESS_DENIED:
+            suc = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " ACCESS_DENIED Access to " + payload[0] + " denied for user: " + payload[1] + ".\n"
+            err = datetime.datetime.now().strftime("%m/%d/%Y %H:%M:%S") + " ACCESS_DENIED ERROR Access to " + payload[0] + " denied for user: " + payload[1] + " with error " + str(status) + ".\n"
+            # SUCESS
+            if status == 0: Log.write(suc)
+            # ERROR
+            else: Log.write(err) 
 
 
     @staticmethod
