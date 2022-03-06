@@ -1,9 +1,13 @@
 # Server side
 
+from asyncore import write
+from codecs import StreamWriter
 import os
 import socket
 import pickle
+import asyncio
 from pathlib import Path
+from urllib import request
 from .loglib import Log
 from .db import File_index, User_db
 
@@ -18,39 +22,54 @@ class Server:
 
 
     @staticmethod
-    def run():
-        """Server's main loop for handling clients requests."""
+    def start():
+        """Start Kryzbu server."""
 
         Server.init()
+        asyncio.run(Server.run())
 
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as handle:
-            handle.bind((Server.IP, Server.PORT))
 
-            while True:
-                handle.listen(10)
-                conn, addr = handle.accept()
-                request = conn.recv(1024).decode()
+    @staticmethod
+    async def run():
+        server = await asyncio.start_server(
+            Server.handle_connection, Server.IP, Server.PORT)
 
-                if 'UPLOAD' in request:
-                    # Request to upload file, structure: 'UPLOAD FILENAME USERNAME'
-                    _, file_name, user_name = request.split(';')
-                    Server.recieve_file(file_name, user_name, conn)
-                elif 'DOWNLOAD' in request:
-                    # Request to download file, structure: 'DOWNLOAD FILENAME USERNAME'
-                    _, file_name, user_name = request.split(';')
-                    Server.serve_file(file_name, user_name, conn)
-                elif 'REMOVE' in request:
-                    # Request to delete file, structure: 'REMOVE FILENAME USERNAME'
-                    _, file_name, user_name = request.split(';')
-                    Server.remove_file(file_name, user_name, conn)
-                elif 'LIST_DIR' in request:
-                    # Request to list available file for download, structure: 'LIST_DIR'
-                    _, user_name = request.split(';')
-                    Server.list_files(user_name, conn)
-                else:
-                    conn.send('UN-KNOWN request, use \{UPLOAD, DOWNLOAD, LIST_DIR\}'.encode())
+        addrs = ', '.join(str(sock.getsockname()) for sock in server.sockets)
+        print(f'Serving on {addrs}')
 
-                conn.close()
+        async with server:
+            await server.serve_forever()
+
+
+    @staticmethod
+    async def handle_connection(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+        """Asynch funcion for handling clients requests."""
+
+        data = await reader.read(Server.BUFFER_SIZE)
+        request = data.decode()
+
+        if 'UPLOAD' in request:
+            # Request to upload file, structure: 'UPLOAD FILENAME USERNAME'
+            _, file_name, user_name = request.split(';')
+            await Server.recieve_file(file_name, user_name, reader, writer)
+        elif 'DOWNLOAD' in request:
+            # Request to download file, structure: 'DOWNLOAD FILENAME USERNAME'
+            _, file_name, user_name = request.split(';')
+            await Server.serve_file(file_name, user_name, reader, writer)
+        elif 'REMOVE' in request:
+            # Request to delete file, structure: 'REMOVE FILENAME USERNAME'
+            _, file_name, user_name = request.split(';')
+            await Server.remove_file(file_name, user_name, reader, writer)
+        elif 'LIST_DIR' in request:
+            # Request to list available file for download, structure: 'LIST_DIR'
+            _, user_name = request.split(';')
+            await Server.list_files(user_name, reader, writer)
+        else:
+            writer.write('UN-KNOWN request, use \{UPLOAD, DOWNLOAD, LIST_DIR\}'.encode())
+            await writer.drain()
+
+        writer.close()
+        await writer.wait_closed()
 
 
     @staticmethod
@@ -75,18 +94,19 @@ class Server:
 
 
     @staticmethod
-    def recieve_file(file_name: str, user_name: str, conn: socket.socket):
+    async def recieve_file(file_name: str, user_name: str, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         """Receive file from a client."""
 
         if User_db.name_exists(user_name):
             # User authenticated based on username
-            conn.send("OK;Authenticated".encode())
+            writer.write("OK;Authenticated".encode())
+            await writer.drain()
             
             file_path = Server.SERVER_FOLDER / file_name
 
             with open(file_path, "wb") as f:
                 while True:
-                    bytes_read = conn.recv(Server.BUFFER_SIZE)
+                    bytes_read = await reader.read(Server.BUFFER_SIZE)
                     if not bytes_read:
                         break
                     f.write(bytes_read)
@@ -95,11 +115,12 @@ class Server:
             File_index.add(file_name, user_name)
         else:
             # User not-authenticated
-            conn.send("ERROR;NotAuthenticated".encode())
+            writer.write("ERROR;NotAuthenticated".encode())
+            await writer.drain()
 
 
     @staticmethod
-    def serve_file(file_name: str, user_name: str, conn: socket.socket):
+    async def serve_file(file_name: str, user_name: str, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         """Send file to a client."""
 
         if User_db.name_exists(user_name):
@@ -108,11 +129,14 @@ class Server:
 
             if os.path.exists(file_path):
                 # Inform client about authentication
-                conn.send("OK;Authenticated".encode())
+                writer.write("OK;Authenticated".encode())
+                await writer.drain()
                 
                 # Send file info
                 file_size = os.path.getsize(file_path)
-                conn.send(f"{file_name};{file_size}".encode())
+                writer.write(f"{file_name};{file_size}".encode())
+                await writer.drain()
+
 
                 # Send file
                 with open(file_path, "rb") as f:
@@ -120,20 +144,21 @@ class Server:
                         bytes_read = f.read(Server.BUFFER_SIZE)
                         if not bytes_read:
                             break
-                        conn.send(bytes_read)
+                        writer.write(bytes_read)
+                        await writer.drain()
 
                 Log.event(Log.Event.DOWNLOAD, 0, [file_name, user_name])
                 File_index.download(file_name)
             else:
                 # Requested file does NOT exist
-                conn.send("ERROR;FileNotFoundError".encode())
+                writer.write("ERROR;FileNotFoundError".encode())
         else:
             # User not-authenticated
-            conn.send("ERROR;NotAuthenticatedError".encode())
+            writer.write("ERROR;NotAuthenticatedError".encode())
 
 
     @staticmethod
-    def remove_file(file_name: str, user_name: str, conn: socket.socket):
+    async def remove_file(file_name: str, user_name: str, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         """Remove file."""
 
         if User_db.name_exists(user_name):
@@ -142,28 +167,28 @@ class Server:
 
             if os.path.exists(file_path):
                 # Inform client about authentication
-                conn.send("OK;Authenticated".encode())
+                writer.write("OK;Authenticated".encode())
 
                 os.remove(file_path)
                 Log.event(Log.Event.DELETE, 0, [file_name, user_name])
                 File_index.delete(file_name)
-                conn.send(f"OK;FileDeleted;{file_name}".encode())
+                writer.write(f"OK;FileDeleted;{file_name}".encode())
             else:
                 # Requested file does NOT exist
-                conn.send("ERROR;FileNotFoundError".encode())
+                writer.write("ERROR;FileNotFoundError".encode())
         else:
             #User not_authenticated
-            conn.send("ERROR;NotAuthenticatedError".encode())
+            writer.write("ERROR;NotAuthenticatedError".encode())
 
     @staticmethod
-    def list_files(user_name:str ,conn: socket.socket):
+    async def list_files(user_name:str, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         """Send available files for download."""
         
         if User_db.name_exists(user_name):
             # User authenticated based on username
-            conn.send("OK;Authenticated".encode())
+            writer.write("OK;Authenticated".encode())
             # Send availabe files
-            conn.send(pickle.dumps(File_index.return_all()))
+            writer.write(pickle.dumps(File_index.return_all()))
         else:
             #User not_authenticated
-            conn.send("ERROR;NotAuthenticatedError".encode())
+            writer.write("ERROR;NotAuthenticatedError".encode())

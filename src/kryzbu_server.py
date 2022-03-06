@@ -30,5 +30,5 @@ elif args.list:
     User_db.show_all()
 else:
     print('[*] Kryzbu server starting...')
-    server.Server.run()
+    server.Server.start()
 
