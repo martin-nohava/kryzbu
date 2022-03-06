@@ -39,27 +39,33 @@ class Client:
 
                 # Receive aswer
                 answer = client.recv(Client.BUFFER_SIZE).decode()
-                # answer: 'OK;Authenticated' or 'ERROR;NotAuthenticated'
-                if 'NotAuthenticated' in answer:
+
+                if 'OK' in answer:
+                    # Answer: 'OK;Authenticated'
+
+                    file_size = os.path.getsize(file_path)
+                    progress = tqdm.tqdm(range(file_size), f"Sending {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
+
+                    # Send file
+                    with open(file_path, "rb") as f:
+                        while True:
+                            bytes_read = f.read(Client.BUFFER_SIZE)
+                            if not bytes_read:
+                                break
+                            client.sendall(bytes_read)
+                            progress.update(len(bytes_read))
+
+                elif 'NotAuthenticated' in answer:
+                    # Answer: 'ERROR;NotAuthenticated'
                     print(f"User '{Client.get_username()}' can't be authenticated, CANNOT upload")
-                    client.close()
-                    return
+                else:
+                    # Answer: Any
+                    print("client.py: Unknown exeption")
+            
+            client.close()
 
-                # Initialize progress bar
-                file_size = os.path.getsize(file_path)
-                progress = tqdm.tqdm(range(file_size), f"Sending {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
-
-                # Send file
-                with open(file_path, "rb") as f:
-                    while True:
-                        bytes_read = f.read(Client.BUFFER_SIZE)
-                        if not bytes_read:
-                            break
-                        client.sendall(bytes_read)
-                        progress.update(len(bytes_read))
-
-                client.close()
         else:
+            # Client FileNotFoundError
             print(f"File '{file_path}' can't be reached, No action taken...")
             print(f"Check correct file name and path and try again ")
 
@@ -79,37 +85,38 @@ class Client:
             # Send DOWNLOAD request
             client.send(f"DOWNLOAD;{file_name};{Client.get_username()}".encode())
 
-            # Receive aswer
+            # Receive aswer: 'OK;Authenticated' or 'ERROR;FileNotFoundError' or 'ERROR;NotAuthenticatedError'
             answer = client.recv(Client.BUFFER_SIZE).decode()
-            # Answer: 'OK;Authenticated' or 'ERROR;FileNotFoundError' or 'ERROR;NotAuthenticatedError'
+
             if 'OK' in answer:
+                # Answer: 'OK;Authenticated'
                 file_info = client.recv(Client.BUFFER_SIZE).decode()
                 file_name, file_size = file_info.split(';')
+
+                progress = tqdm.tqdm(range(int(file_size)), f"Receiving {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
+
+                # Receive file
+                with open(str(os.path.join(os.path.expanduser('~/Downloads'), file_name)), "wb") as f:
+                    while True:
+                        bytes_read = client.recv(Client.BUFFER_SIZE)
+                        if not bytes_read:
+                            break
+                        f.write(bytes_read)
+                        progress.update(len(bytes_read))
+
             elif 'FileNotFoundError' in answer:
+                # Answer: 'ERROR;FileNotFoundError'
                 print(f"File '{file_name}' does NOT exist, CANNOT download")
                 print("Available files:")
                 Client.list_files(detailed=False)
-                client.close()
-                return
+
             elif 'NotAuthenticatedError' in answer:
+                # Answer: 'ERROR;NotAuthenticatedError'
                 print(f"User '{Client.get_username()}' can't be authenticated, CANNOT downdload")
-                client.close()
-                return
+
             else:
-                print("Unknown exeption")
-                client.close()
-                return         
-
-            progress = tqdm.tqdm(range(int(file_size)), f"Receiving {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
-
-            # Receive file
-            with open(str(os.path.join(os.path.expanduser('~/Downloads'), file_name)), "wb") as f:
-                while True:
-                    bytes_read = client.recv(Client.BUFFER_SIZE)
-                    if not bytes_read:
-                        break
-                    f.write(bytes_read)
-                    progress.update(len(bytes_read))
+                # Answer: Any
+                print("client.py: Unknown exeption")      
 
             client.close()
 
@@ -129,23 +136,29 @@ class Client:
             # Send REMOVE request
             client.send(f"REMOVE;{file_name};{Client.get_username()}".encode())
 
-            # Receive answer
+            # Receive answer: 'OK;Authenticated' or 'ERROR;FileNotFoundError' or 'ERROR;NotAuthenticatedError'
             answer = client.recv(Client.BUFFER_SIZE).decode()
-            # Answer: 'OK;Authenticated' or 'ERROR;FileNotFoundError' or 'ERROR;NotAuthenticatedError'
+
             if 'OK' in answer:
+                # Answer: 'OK;Authenticated'
                 delete_info = client.recv(Client.BUFFER_SIZE).decode()
                 if 'FileDeleted' in delete_info:
-                    # Message: 'OK;FileDeleted'
+                    # delete_info: 'OK;FileDeleted'
                     print(f"File '{file_name}' successfully removed")
+
             elif 'FileNotFoundError' in answer:
-                # FileNotFound error
+                # Answer: 'ERROR;FileNotFoundError'
                 print(f"File '{file_name}' does NOT exist, CANNOT remove")
                 print("Available files:")
                 Client.list_files(detailed=False)
+
             elif 'NotAuthenticatedError' in answer:
+                # Answer: 'ERROR;NotAuthenticatedError'
                 print(f"User '{Client.get_username()}' can't be authenticated, CANNOT remove")
+
             else:
-                print("Unknown exeption")
+                # Answer: Any
+                print("client.py: Unknown exeption")
 
             client.close()
 
@@ -163,25 +176,39 @@ class Client:
                 exit(1)
 
             # Send LIST_DIR request
-            client.send(f"LIST_DIR".encode())
+            client.send(f"LIST_DIR;{Client.get_username()}".encode())
 
-            # Receive available files
-            list = pickle.loads(client.recv(1024))   # TODO: Potentional problem when files list is bigger than 1024b
-            
-            if detailed:
-                print ("{:<20} {:<15} {:<15} {:<15}".format('File','Owner','Created','Downloads'))
-                print ("{:–<65}".format('–'))
-                if len(list) != 0:
-                    for row in list:
-                        print ("{:<20} {:<15} {:<15} {:<15}".format(row[0], row[1], row[2], str(row[3])))
+            # Receive answer: 'OK;Authenticated' or 'ERROR;NotAuthenticatedError'
+            answer = client.recv(Client.BUFFER_SIZE).decode()
+
+            if 'OK' in answer:
+                # Answer: 'OK;Authenticated'
+                list = pickle.loads(client.recv(Client.BUFFER_SIZE))
+                if detailed:
+                    print ("{:<20} {:<15} {:<15} {:<15}".format('File','Owner','Created','Downloads'))
+                    print ("{:–<65}".format('–'))
+                    if len(list) != 0:
+                        for row in list:
+                            print ("{:<20} {:<15} {:<15} {:<15}".format(row[0], row[1], row[2], str(row[3])))
+                    else:
+                        print ("{:^65}".format('Nothing here'))
                 else:
-                    print ("{:^65}".format('Nothing here'))
+                    if len(list) != 0:
+                        for row in list:
+                            print(row[0], end='\t')
+                    else:
+                        print ('Nothing here')
+
+            elif 'NotAuthenticatedError' in answer:
+                # Answer: 'ERROR;NotAuthenticatedError'
+                print(f"User '{Client.get_username()}' can't be authenticated, CANNOT list files")
+                client.close()
+                return
             else:
-                if len(list) != 0:
-                    for row in list:
-                        print(row[0], end='\t')
-                else:
-                    print ('Nothing here')
+                # Answer: Any
+                print("client.py: Unknown exeption")
+                return
+            
 
     @staticmethod
     def init() -> None:
@@ -196,6 +223,7 @@ class Client:
         
         # Before any action can be taken user has to be loged in
         Client.user_exists()
+
 
     @staticmethod
     def user_exists():
@@ -212,6 +240,7 @@ class Client:
         # Else create file and ask for data
         else:
             Client.login()
+
 
     @staticmethod
     def login():
@@ -232,8 +261,6 @@ class Client:
                 print("Try again!")
         print("You failed 3 times, get the fuck out")
 
-
-
     
     @staticmethod
     def info():
@@ -247,6 +274,7 @@ class Client:
             items = line.split('=')
             print(items[0] + ': ' + items[1], end='')
     
+
     @staticmethod
     def get_username() -> str:
         ex = 'USERNAME=.+'
@@ -258,7 +286,9 @@ class Client:
                 break
         return result.group().split('=')[1]
 
+
     @staticmethod
     def change_user():
         # os.remove(Client.USER_CONF)
         Client.login()
+        

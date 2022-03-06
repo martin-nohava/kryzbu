@@ -45,7 +45,8 @@ class Server:
                     Server.remove_file(file_name, user_name, conn)
                 elif 'LIST_DIR' in request:
                     # Request to list available file for download, structure: 'LIST_DIR'
-                    Server.list_files(conn)
+                    _, user_name = request.split(';')
+                    Server.list_files(user_name, conn)
                 else:
                     conn.send('UN-KNOWN request, use \{UPLOAD, DOWNLOAD, LIST_DIR\}'.encode())
 
@@ -155,7 +156,14 @@ class Server:
             conn.send("ERROR;NotAuthenticatedError".encode())
 
     @staticmethod
-    def list_files(conn: socket.socket):
+    def list_files(user_name:str ,conn: socket.socket):
         """Send available files for download."""
         
-        conn.send(pickle.dumps(File_index.return_all()))
+        if User_db.name_exists(user_name):
+            # User authenticated based on username
+            conn.send("OK;Authenticated".encode())
+            # Send availabe files
+            conn.send(pickle.dumps(File_index.return_all()))
+        else:
+            #User not_authenticated
+            conn.send("ERROR;NotAuthenticatedError".encode())
