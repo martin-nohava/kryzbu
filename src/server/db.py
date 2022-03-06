@@ -57,22 +57,6 @@ class User_db():
 
 
     @staticmethod
-    def name_exists(user_name: str) -> bool:
-        """Check if there is the specified username in user database."""
-
-        con = sqlite3.connect(User_db.FOLDER / User_db.NAME)
-        cur = con.cursor()
-        cur.execute(f"SELECT name FROM {User_db.TABLE_NAME} WHERE name=:name", {"name": user_name})
-        if cur.fetchone():
-            cur.close()
-            return True
-        else:
-            cur.close()
-            return False
-
-
-
-    @staticmethod
     def return_all():
         """Return all user table"""
 
@@ -91,6 +75,13 @@ class User_db():
         """Check if User already exists or not."""
 
         return Database.table_exists(Database.Table.USER_DB)
+
+
+    @staticmethod
+    def name_exists(user_name: str) -> bool:
+        """Check if there is the specified username in user database."""
+
+        return Database.name_exists(Database.Table.USER_DB, user_name)
 
 
 class File_index():
@@ -120,14 +111,18 @@ class File_index():
    
 
     @staticmethod
-    def add(file_name: str, user_name):
+    def add(file_name: str, user_name: str):
         """Add new file index to database."""
-
-        con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
-        cur = con.cursor()
-        cur.execute(f"INSERT INTO {File_index.TABLE_NAME} VALUES (?,?,?,?)", (file_name, user_name, datetime.datetime.now().strftime("%m/%d/%Y"), 0))
-        con.commit()
-        con.close()
+        
+        if not File_index.file_exists(file_name):
+            con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
+            cur = con.cursor()
+            cur.execute(f"INSERT INTO {File_index.TABLE_NAME} VALUES (?,?,?,?)", (file_name, user_name, datetime.datetime.now().strftime("%m/%d/%Y"), 0))
+            con.commit()
+            con.close()
+        else:
+            # File with same name already exists
+            print(f"WARNING, File_index: Try add, but file '{file_name}' already exists. File was overwriten")
 
 
     @staticmethod
@@ -201,6 +196,12 @@ class File_index():
         """Check if file_index already exists or not."""
 
         return Database.table_exists(Database.Table.FILE_INDEX)
+
+    @staticmethod
+    def file_exists(file_name: str) -> bool:
+        """Check if file with specified name exists in file index."""
+        
+        return Database.name_exists(Database.Table.FILE_INDEX, file_name)
 
 
 class Database:
@@ -290,4 +291,21 @@ class Database:
             return True
         else:
             con.close()
+            return False
+
+    @staticmethod
+    def name_exists(table: Table, name: str) -> bool:
+        """Check if specified name exists in specified table."""
+
+        if table == Database.Table.FILE_INDEX:
+            con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
+        else:
+            con = sqlite3.connect(User_db.FOLDER / User_db.NAME)
+        cur = con.cursor()
+        cur.execute(f"SELECT name FROM {table.value} WHERE name=:name", {"name": name})
+        if cur.fetchone():
+            cur.close()
+            return True
+        else:
+            cur.close()
             return False

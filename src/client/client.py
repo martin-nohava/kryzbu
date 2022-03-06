@@ -202,12 +202,12 @@ class Client:
             elif 'NotAuthenticatedError' in answer:
                 # Answer: 'ERROR;NotAuthenticatedError'
                 print(f"User '{Client.get_username()}' can't be authenticated, CANNOT list files")
-                client.close()
-                return
+                
             else:
                 # Answer: Any
                 print("client.py: Unknown exeption")
-                return
+                
+            client.close()
             
 
     @staticmethod
@@ -291,4 +291,3 @@ class Client:
     def change_user():
         # os.remove(Client.USER_CONF)
         Client.login()
-        
