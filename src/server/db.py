@@ -1,4 +1,5 @@
 from pathlib import Path
+from unicodedata import name
 from .loglib import Log
 from enum import Enum
 import datetime
@@ -31,13 +32,17 @@ class User_db():
     def add(user_name: str, pass_hash: str, pub_key: str, secret: str):
         """Add new user to database."""
 
-        con = sqlite3.connect(User_db.FOLDER / User_db.NAME)
-        cur = con.cursor()
-        cur.execute(f"INSERT INTO {User_db.TABLE_NAME} VALUES (?,?,?,?)", (user_name, pass_hash, pub_key, secret))
-        print(f"INFO, User_db: New user successfully added, name: {user_name}")
-        Log.event(Log.Event.REGISTER, 0, [user_name])
-        con.commit()
-        con.close()
+        if not User_db.name_exists(user_name):
+            con = sqlite3.connect(User_db.FOLDER / User_db.NAME)
+            cur = con.cursor()
+            cur.execute(f"INSERT INTO {User_db.TABLE_NAME} VALUES (?,?,?,?)", (user_name, pass_hash, pub_key, secret))
+            print(f"INFO, User_db: New user successfully added, name: {user_name}")
+            Log.event(Log.Event.REGISTER, 0, [user_name])
+            con.commit()
+            con.close()
+        else:
+            # User with same name already exists
+            print(f"WARNING, User_db: Try add, but user with name: '{user_name}' already exists, New record was NOT added")
 
 
     @staticmethod
