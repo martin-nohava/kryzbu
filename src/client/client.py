@@ -189,14 +189,16 @@ class Client:
             # Answer: 'OK;Authenticated'
             list = pickle.loads(await reader.read())
             if detailed:
-                print ("{:<20} {:<15} {:<15} {:<15}".format('File','Owner','Created','Downloads'))
-                print ("{:–<65}".format('–'))
+                # Detailed list
+                print ("{:<15} {:<12} {:<12} {:<15}".format('Owner','Created','Downloads', 'File'))
+                print ("{:–<60}".format('–'))
                 if len(list) != 0:
                     for row in list:
-                        print ("{:<20} {:<15} {:<15} {:<15}".format(row[0], row[1], row[2], str(row[3])))
+                        print ("{:<15} {:<15} {:<9} {:<15}".format(row[1], row[2], str(row[3]), row[0]))
                 else:
                     print ("{:^65}".format('Nothing here'))
             else:
+                # Short list
                 if len(list) != 0:
                     for row in list:
                         print(row[0], end='\t')
