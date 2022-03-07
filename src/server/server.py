@@ -14,7 +14,6 @@ class Server:
     IP = "127.0.0.1"
     PORT = 60606
     EOM = '\n' # End of Message sign, should be same as in client.py
-    BUFFER_SIZE = 4096 # TODO: defined on two seperate places (in client.py as well)
     SERVER_FOLDER = Path("server/_data/files/") # Universal Path object for multi OS path declaration
 
 
@@ -138,7 +137,7 @@ class Server:
                 # Send file
                 with open(file_path, "rb") as f:
                     while True:
-                        bytes_read = f.read(Server.BUFFER_SIZE)
+                        bytes_read = f.read(1024)
                         if not bytes_read:
                             break
                         writer.write(bytes_read)

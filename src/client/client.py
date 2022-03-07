@@ -1,6 +1,5 @@
 # Client side
 
-from distutils.command.clean import clean
 import hashlib
 import asyncio
 import os
@@ -8,14 +7,12 @@ import re
 from pathlib import Path
 import uuid
 import tqdm
-import socket
 import pickle
 import getpass
 
 class Client:
     """Implementation of a Kryzbu client."""
 
-    BUFFER_SIZE = 4096
     SERVER_IP = "127.0.0.1"
     SERVER_PORT = 60606
     USER_CONF = Path('client/_data/config/user.conf')
@@ -51,7 +48,7 @@ class Client:
                 # Send file
                 with open(file_path, "rb") as f:
                     while True:
-                        bytes_read = f.read(Client.BUFFER_SIZE)
+                        bytes_read = f.read(1024)
                         if not bytes_read:
                             break
                         progress.update(len(bytes_read))
@@ -103,7 +100,7 @@ class Client:
             # Receive file
             with open(str(os.path.join(os.path.expanduser('~/Downloads'), file_name)), "wb") as f:
                 while True:
-                    bytes_read = await reader.read()
+                    bytes_read = await reader.read(1024)
                     if not bytes_read:
                         break
                     f.write(bytes_read)
