@@ -6,6 +6,7 @@ import asyncio
 from pathlib import Path
 from .loglib import Log
 from .db import File_index, User_db
+from .rsalib import Rsa
 
 
 class Server:
@@ -74,7 +75,8 @@ class Server:
 
         PATHS = (
         'server/_data/files/',
-        'server/_data/logs/'
+        'server/_data/logs/',
+        'server/_data/keys/'
         )
         for path in PATHS:
             # Any missing parents of this path are created as needed, if folder already exists nothing happens
@@ -85,6 +87,9 @@ class Server:
         
         #Initiate user database
         User_db.init()
+
+        # Initialize RSA key-pair
+        Rsa.init()
 
         print('[*] Kryzbu server started successfully...')
 
