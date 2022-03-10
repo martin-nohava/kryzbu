@@ -17,10 +17,10 @@ args = parser.parse_args()
 
 if args.register:
     # Add new record to user database
-    if len(args.register) == 4:
-        User_db.add(args.register[0], args.register[1], args.register[2], args.register[3])
+    if len(args.register) == 2:
+        User_db.add(args.register[0], args.register[1])
     else:
-        raise Exception(f"flag: --register needs 4 positional arguments, {len(args.register)} was given. \nUsage: kryzbu_server.py --register <username> <pass_hash> <pub_key> <secrete>")
+        raise Exception(f"flag: --register needs 2 positional arguments, {len(args.register)} was given. \nUsage: kryzbu_server.py --register <username> <password>")
 elif args.remove:
     # Remove user from useres database
     for user_name in args.remove:

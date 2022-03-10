@@ -1,15 +1,17 @@
+import hashlib
 from pathlib import Path
 from unicodedata import name
+import uuid
 from .loglib import Log
 from enum import Enum
 import datetime
 import sqlite3
 import os
-
+from Crypto.Random import get_random_bytes
 
 class User_db():
     """Database of users registered in Kryzbu server.
-    Content of table: username, SHA256(password || salt), public_key, secret"""
+    Content of table: username, SHA256(password || salt), aes_key, salt"""
 
     FOLDER = Path("server/_data")
     TABLE_NAME = 'users'
@@ -22,20 +24,24 @@ class User_db():
         if not User_db.table_exists():
             con = sqlite3.connect(User_db.FOLDER / User_db.NAME)
             cur = con.cursor()
-            cur.execute(f"CREATE TABLE {User_db.TABLE_NAME} (name text, pass_hash text, pub_key text, secret text)")
+            cur.execute(f"CREATE TABLE {User_db.TABLE_NAME} (name text, pass_hash text, aes_key text, salt text)")
             print("WARNING, User_db: No table found, empty one created")
             con.commit()
             con.close()
 
     
     @staticmethod
-    def add(user_name: str, pass_hash: str, pub_key: str, secret: str):
+    def add(user_name: str, password: str):
         """Add new user to database."""
+        
+        salt = uuid.uuid4().hex
+        pass_hash = str(hashlib.sha256(salt.encode() + password.encode()).hexdigest())
+        aes_key = get_random_bytes(16)
 
         if not User_db.name_exists(user_name):
             con = sqlite3.connect(User_db.FOLDER / User_db.NAME)
             cur = con.cursor()
-            cur.execute(f"INSERT INTO {User_db.TABLE_NAME} VALUES (?,?,?,?)", (user_name, pass_hash, pub_key, secret))
+            cur.execute(f"INSERT INTO {User_db.TABLE_NAME} VALUES (?,?,?,?)", (user_name, pass_hash, aes_key, salt))
             print(f"INFO, User_db: New user successfully added, name: {user_name}")
             Log.event(Log.Event.REGISTER, 0, [user_name])
             con.commit()
