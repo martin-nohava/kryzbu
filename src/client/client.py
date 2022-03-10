@@ -16,6 +16,7 @@ class Client:
     SERVER_IP = "127.0.0.1"
     SERVER_PORT = 60606
     USER_CONF = Path('client/_data/config/user.conf')
+    SERVER_PUBLIC_KEY = Path('client/_data/serkey/rsa.pub')
     EOM = '\n' # End of Message sign
 
 
@@ -219,18 +220,60 @@ class Client:
 
     @staticmethod
     def init() -> None:
-        """Checks user information and folder structure."""
-
         PATHS = (
         'client/_data/config/',
+        'client/_data/serkey/'
         )
         for path in PATHS:
             # Any missing parents of this path are created as needed, if folder already exists nothing happens
             Path(path).mkdir(parents=True, exist_ok=True)
-        
-        # Before any action can be taken user has to be loged in
-        Client.user_exists()
 
+    @staticmethod
+    def online_operation(online) -> None:
+        """Checks user information and folder structure. Obtains server public key."""
+
+        if online:
+            # Get server's public key rsa.pub
+            asyncio.run(Client.get_server_publickey())
+
+            # Before any action can be taken user has to be loged in
+            Client.user_exists()
+
+    @staticmethod
+    async def get_server_publickey():
+        if not os.path.exists(Client.SERVER_PUBLIC_KEY):
+            print('INFO: No server key found, requesting new...')
+            try:
+                reader, writer = await asyncio.open_connection(Client.SERVER_IP, Client.SERVER_PORT)
+            except ConnectionRefusedError as e:
+                print(e)
+                print("Server probably ins't running!!!")
+                exit(1)
+
+            # Send GETKEY request
+            writer.write(f"GETKEY{Client.EOM}".encode())
+
+            # Receive aswer: 'OK;Authenticated' or 'ERROR;FileNotFoundError' or 'ERROR;NotAuthenticatedError'
+            data = await reader.readuntil(Client.EOM.encode())
+            answer = data.decode()[:-1] # Decode and strip EOM symbol
+
+            if 'OK' in answer:
+                # Answer: 'OK;Authenticated'
+                # Receive file
+                with open(str(Client.SERVER_PUBLIC_KEY), "wb") as f:
+                    while True:
+                        bytes_read = await reader.read(1024)
+                        if not bytes_read:
+                            break
+                        f.write(bytes_read)
+                print('INFO: Key downloaded sucessfully.')
+
+            else:
+                # Answer: Any
+                print("client.py: Unknown exeption while obtaining server public key")      
+
+            writer.close()
+            await writer.wait_closed()
 
     @staticmethod
     def user_exists():
@@ -298,3 +341,10 @@ class Client:
     def change_user():
         # os.remove(Client.USER_CONF)
         Client.login()
+
+    @staticmethod
+    def flush_key():
+        try:
+            os.remove(Client.SERVER_PUBLIC_KEY)
+        except FileNotFoundError as e:
+            print('WARN: Key allready flushed!')

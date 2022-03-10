@@ -61,6 +61,9 @@ class Server:
             # Request to list available file for download, structure: 'LIST_DIR'
             _, user_name = request.split(';')
             await Server.list_files(user_name, reader, writer)
+        elif 'GETKEY' in request:
+            # Request to get server public key
+            await Server.send_pubkey(reader, writer)
         else:
             writer.write(f"UN-KNOWN request, use [UPLOAD, DOWNLOAD, LIST_DIR]{Server.EOM}".encode())
             await writer.drain()
@@ -193,3 +196,26 @@ class Server:
         else:
             #User not_authenticated
             writer.write(f"ERROR;NotAuthenticatedError{Server.EOM}".encode())
+
+    @staticmethod
+    async def send_pubkey(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
+        """Send public key to client."""
+        
+        # Inform client about authentication
+        writer.write(f"OK;Authenticated{Server.EOM}".encode())
+        await writer.drain()
+        
+        # Send file info
+        file_size = os.path.getsize(Rsa.get_pub_key_location())
+        writer.write(f"{os.path.basename(Rsa.get_pub_key_location())};{file_size}{Server.EOM}".encode())
+        await writer.drain()
+
+
+        # Send file
+        with open(Rsa.get_pub_key_location(), "rb") as f:
+            while True:
+                bytes_read = f.read(1024)
+                if not bytes_read:
+                    break
+                writer.write(bytes_read)
+                await writer.drain()

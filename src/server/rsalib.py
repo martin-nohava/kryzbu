@@ -30,3 +30,7 @@ class Rsa:
       print('INFO: RSA key-pair generated.')
     else:
       print('INFO: RSA key-pair found.')
+  
+  @staticmethod
+  def get_pub_key_location():
+    return Rsa.KEY_PATH / Rsa.KEY_FILE_NAMES[1]

@@ -17,6 +17,7 @@ parser.add_argument("-i", "--info", help="show user information and client setti
 parser.add_argument("-l", "--list", help="list available files to download", action="store_true")
 parser.add_argument("-s", "--switchusr", help="switch to different user account", action="store_true")
 parser.add_argument("-la", "--listall", help="list available files to download including additional info", action="store_true")
+parser.add_argument("-fk", "--flushkey", help="flush saved server public key", action="store_true")
 group.add_argument("-u", "--upload", metavar="FILE", help="upload file to server", action="extend", nargs="+", type=str)
 group.add_argument("-d", "--download", metavar="FILE", help="download file from server", action="extend", nargs="+", type=str)
 group.add_argument("-r", "--remove", metavar="FILE", help="remove file from server", action="extend", nargs="+", type=str)
@@ -24,27 +25,38 @@ args = parser.parse_args()
 
 if args.upload:
     # Upload file to a server
+    client.Client.online_operation(True)
     for file in args.upload:
         asyncio.run(client.Client.upload(file))
 elif args.download:
     # Download file from server
+    client.Client.online_operation(True)
     for file in args.download:
         asyncio.run(client.Client.download(file))
 elif args.remove:
     # Remove file from server
+    client.Client.online_operation(True)
     for file in args.remove:
         asyncio.run(client.Client.remove(file))
 elif args.list:
     # List available files on server
+    client.Client.online_operation(True)
     asyncio.run(client.Client.list_files(False))
 elif args.listall:
     # List available files on server including additional info
+    client.Client.online_operation(True)
     asyncio.run(client.Client.list_files(True))
 elif args.info:
-    # List available files on server including additional info
+    # List user information
+    client.Client.online_operation(False)
     client.Client.info()
 elif args.switchusr:
-    # List available files on server including additional info
+    # Change user
+    client.Client.online_operation(False)
     client.Client.change_user()
+elif args.flushkey:
+    # Delete saved server key
+    client.Client.online_operation(False)
+    client.Client.flush_key()
 else:
     parser.print_help()
