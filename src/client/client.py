@@ -99,7 +99,7 @@ class Client:
             progress = tqdm.tqdm(range(int(file_size)), f"Receiving {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
 
             # Receive file
-            with open(str(os.path.join(os.path.expanduser('~/Downloads'), file_name)), "wb") as f:
+            with open(str(os.path.join(Client.get_download_folder(), file_name)), "wb") as f:
                 while True:
                     bytes_read = await reader.read(1024)
                     if not bytes_read:
@@ -303,13 +303,60 @@ class Client:
             if password == passwordCheck:
                 salt = uuid.uuid4().hex
                 with open(Client.USER_CONF, "w") as f:
-                        f.write('USERNAME=%s\nPASSWORD=%s\nSALT=%s' %(username, str(hashlib.sha256(salt.encode() + password.encode()).hexdigest()), salt))
+                        f.write(f"USERNAME={username}\n"\
+                                f"PASSWORD={str(hashlib.sha256(salt.encode() + password.encode()).hexdigest())}\n"\
+                                f"SALT={salt}\n"\
+                                f"DOWNLOAD_FOLDER={Path(os.path.expanduser('~/Downloads'))}")
                 print('INFO: You are now logged in as ' + username)
                 return
             else:
                 print("Passwords does not match! ")
                 print("Try again!")
         print("You failed 3 times, get the fuck out")
+
+
+    @staticmethod
+    def get_download_folder() -> str:
+        """Get location of download folder from User config file."""
+        
+        with open(Client.USER_CONF, 'r') as f:
+            for line in f.readlines():
+                download_folder = re.search('(?<=DOWNLOAD_FOLDER=).+', line)
+                if download_folder:
+                    return Path(download_folder.group())
+            # No line with DOWNLOAD_FOLDER=/path/to/file in user configuration file
+            raise Exception(f"Did NOT find DOWLOAD_FOLDER configuration in user configuration, config file: {Client.USER_CONF}")
+
+
+    @staticmethod
+    def set_download_folder(folder_path: str):
+        """Set folder location for files to be downloaded from server."""
+
+        # In order to re-write config file, we firt read all config file
+        # and save it. Than we write same content back line by line except
+        # line with DOWNLOAD_FOLER specification. Only that line we change
+        # to store new downdload foler location.
+
+        config: str = None
+
+        # Transfer to default path format
+        folder_path = Path(folder_path)
+
+        if os.path.exists(folder_path):
+            # Read and save content of config file
+            with open(Client.USER_CONF, 'r') as f:
+                config = f.readlines()
+            
+            # Chanche only DOWNLOAD_FOLDER line
+            with open(Client.USER_CONF, 'w') as f:
+                for line in config:
+                    if 'DOWNLOAD_FOLDER' in line:
+                        f.write(f"DOWNLOAD_FOLDER={folder_path}\n")
+                    else:
+                        f.write(line)
+            print(f"INFO: Download folder successfully changed to {folder_path}")
+        else:
+            print(f"WARING, Client.set_download_folder(): File path NOT exists, no action taken, path: {folder_path}")
 
     
     @staticmethod

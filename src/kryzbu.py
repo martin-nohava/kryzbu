@@ -21,6 +21,7 @@ parser.add_argument("-fk", "--flushkey", help="flush saved server public key", a
 group.add_argument("-u", "--upload", metavar="FILE", help="upload file to server", action="extend", nargs="+", type=str)
 group.add_argument("-d", "--download", metavar="FILE", help="download file from server", action="extend", nargs="+", type=str)
 group.add_argument("-r", "--remove", metavar="FILE", help="remove file from server", action="extend", nargs="+", type=str)
+parser.add_argument("--setfolder", metavar="/path/to/file", help="set download folder", type=str)
 args = parser.parse_args()
 
 if args.upload:
@@ -58,5 +59,7 @@ elif args.flushkey:
     # Delete saved server key
     client.Client.online_operation(False)
     client.Client.flush_key()
+elif args.setfolder:
+    client.Client.set_download_folder(args.setfolder)
 else:
     parser.print_help()
