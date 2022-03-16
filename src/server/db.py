@@ -58,11 +58,11 @@ class User_db():
         succ = Database.delete(Database.Table.USER_DB, user_name)
         if succ == 0:
             print(f"INFO, User_db: User successfully deleted, name: {user_name}")
+            Log.event(Log.Event.UNREGISTER, 0, [user_name])
         elif succ == 1:
-            print(f"INFO, User_db: User not exists, no action taken, name: {user_name}")
+            print(f"INFO, User_db: User NOT exists, no action taken, name: {user_name}")
         else:
-            print(f"ERROR, User_db: Unknown error in User_db.delete(), user_name: {user_name}")
-        Log.event(Log.Event.UNREGISTER, 0, [user_name])
+            print(f"ERROR, User_db.delete(): Database.delete() returned unexpected value, returned value: {succ}")
 
     
     @staticmethod
