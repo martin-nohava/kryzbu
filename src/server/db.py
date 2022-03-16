@@ -55,8 +55,13 @@ class User_db():
     def delete(user_name: str):
         """Delete user."""
 
-        Database.delete(Database.Table.USER_DB, user_name)
-        print(f"INFO, User_db: User successfully deleted, name: {user_name}")
+        succ = Database.delete(Database.Table.USER_DB, user_name)
+        if succ == 0:
+            print(f"INFO, User_db: User successfully deleted, name: {user_name}")
+        elif succ == 1:
+            print(f"INFO, User_db: User not exists, no action taken, name: {user_name}")
+        else:
+            print(f"ERROR, User_db: Unknown error in User_db.delete(), user_name: {user_name}")
         Log.event(Log.Event.UNREGISTER, 0, [user_name])
 
     
@@ -224,18 +229,25 @@ class Database:
 
 
     @staticmethod
-    def delete(table: Table, name: str):
-        """Delete record from specified table"""
+    def delete(table: Table, name: str) -> int:
+        """Delete record from specified table.
+        
+        returns:\t 0 - Successfully deleted
+        \t     1 - Record not in table"""
 
-        if table == Database.Table.FILE_INDEX:
-            con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
+        if Database.name_exists(table, name):
+            if table == Database.Table.FILE_INDEX:
+                con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
+            else:
+                con = sqlite3.connect(User_db.FOLDER / User_db.NAME)
+            cur = con.cursor()
+            cur.execute(f"DELETE FROM {table.value} WHERE name=:name", {"name": name})
+            con.commit()
+            con.close() 
+            return 0
         else:
-            con = sqlite3.connect(User_db.FOLDER / User_db.NAME)
-        cur = con.cursor()
-        cur.execute(f"DELETE FROM {table.value} WHERE name=:name", {"name": name})
-        con.commit()
-        con.close() 
-
+            # Record not found
+            return 1
 
     @staticmethod
     def get_record(table: Table, name):
