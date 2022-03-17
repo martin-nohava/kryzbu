@@ -11,8 +11,16 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-l", "--list", help="list all users", action="store_true")
-parser.add_argument("--remove" , metavar="username", nargs='+', help="remove users from user database")
-parser.add_argument("--register", metavar="spec", nargs='+', help="register new user to server", action="extend")
+parser.add_argument(
+    "--remove", metavar="username", nargs="+", help="remove users from user database"
+)
+parser.add_argument(
+    "--register",
+    metavar="spec",
+    nargs="+",
+    help="register new user to server",
+    action="extend",
+)
 args = parser.parse_args()
 
 if args.register:
@@ -20,7 +28,9 @@ if args.register:
     if len(args.register) == 2:
         User_db.add(args.register[0], args.register[1])
     else:
-        raise Exception(f"flag: --register needs 2 positional arguments, {len(args.register)} was given. \nUsage: kryzbu_server.py --register <username> <password>")
+        raise Exception(
+            f"flag: --register needs 2 positional arguments, {len(args.register)} was given. \nUsage: kryzbu_server.py --register <username> <password>"
+        )
 elif args.remove:
     # Remove user from useres database
     for user_name in args.remove:
@@ -29,6 +39,5 @@ elif args.list:
     # List all registered users (user table)
     User_db.show_all()
 else:
-    print('[*] Kryzbu server starting...')
+    print("[*] Kryzbu server starting...")
     server.Server.start()
-

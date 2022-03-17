@@ -9,19 +9,62 @@ import asyncio
 from multiprocessing.connection import Client
 from client import client
 
+
 client.Client.init()
 
 parser = argparse.ArgumentParser()
 group = parser.add_mutually_exclusive_group()
-parser.add_argument("-i", "--info", help="show user information and client settings", action="store_true")
-parser.add_argument("-l", "--list", help="list available files to download", action="store_true")
-parser.add_argument("-s", "--switchusr", help="switch to different user account", action="store_true")
-parser.add_argument("-la", "--listall", help="list available files to download including additional info", action="store_true")
-parser.add_argument("-fk", "--flushkey", help="flush saved server public key", action="store_true")
-group.add_argument("-u", "--upload", metavar="FILE", help="upload file to server", action="extend", nargs="+", type=str)
-group.add_argument("-d", "--download", metavar="FILE", help="download file from server", action="extend", nargs="+", type=str)
-group.add_argument("-r", "--remove", metavar="FILE", help="remove file from server", action="extend", nargs="+", type=str)
-parser.add_argument("--setfolder", metavar="/path/to/file", help="set download folder", type=str)
+parser.add_argument(
+    "-i",
+    "--info",
+    help="show user information and client settings",
+    action="store_true",
+)
+parser.add_argument(
+    "-l", "--list", help="list available files to download", action="store_true"
+)
+parser.add_argument(
+    "-s", "--switchusr", help="switch to different user account", action="store_true"
+)
+parser.add_argument(
+    "-la",
+    "--listall",
+    help="list available files to download including additional info",
+    action="store_true",
+)
+parser.add_argument(
+    "-fk", "--flushkey", help="flush saved server public key", action="store_true"
+)
+group.add_argument(
+    "-u",
+    "--upload",
+    metavar="FILE",
+    help="upload file to server",
+    action="extend",
+    nargs="+",
+    type=str,
+)
+group.add_argument(
+    "-d",
+    "--download",
+    metavar="FILE",
+    help="download file from server",
+    action="extend",
+    nargs="+",
+    type=str,
+)
+group.add_argument(
+    "-r",
+    "--remove",
+    metavar="FILE",
+    help="remove file from server",
+    action="extend",
+    nargs="+",
+    type=str,
+)
+parser.add_argument(
+    "--setfolder", metavar="/path/to/file", help="set download folder", type=str
+)
 args = parser.parse_args()
 
 if args.upload:

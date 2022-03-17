@@ -6,6 +6,20 @@
 </h1>
 
 
+# Install
+
+For Users:
+```
+pip install -r requirements.txt
+```
+
+For developers:
+```
+pip install -r requirements-dev.txt
+pre-commit install
+```
+
+
 <h4 align="center">
 Kryptograficky zabezpečené úložiště  🔒
 </h4>
