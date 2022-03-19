@@ -9,6 +9,8 @@ import uuid
 import tqdm
 import pickle
 import getpass
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP, AES
 
 class Client:
     """Implementation of a Kryzbu client."""
@@ -16,7 +18,8 @@ class Client:
     SERVER_IP = "127.0.0.1"
     SERVER_PORT = 60606
     USER_CONF = Path('client/_data/config/user.conf')
-    SERVER_PUBLIC_KEY = Path('client/_data/serkey/rsa.pub')
+    SERVER_PUBLIC_KEY = Path('client/_data/keys/publ.pem')
+    USER_AES_KEY_BASE_PATH = Path('client/_data/keys')
     EOM = '\n' # End of Message sign
 
 
@@ -222,7 +225,7 @@ class Client:
     def init() -> None:
         PATHS = (
         'client/_data/config/',
-        'client/_data/serkey/'
+        'client/_data/keys/'
         )
         for path in PATHS:
             # Any missing parents of this path are created as needed, if folder already exists nothing happens
@@ -277,7 +280,7 @@ class Client:
 
     @staticmethod
     def user_exists():
-        required = ('USERNAME=.+', 'PASSWORD=.+', 'SALT=.+')
+        required = ('USERNAME=.+', 'KEY_PATH=.+')
         # Check if config file exists
         if os.path.exists(Client.USER_CONF):
             # Check required user data are filled in
@@ -285,34 +288,115 @@ class Client:
                 lines = f.read()
                 for ex in required:
                     if not re.search(ex, lines):
-                        Client.login()
+                        asyncio.run(Client.login())
                         return
+            # Check if key file exists
+            ex = 'KEY_PATH=.+'
+            f = open(Client.USER_CONF, 'r')
+            lines = f.readlines()
+            for line in lines:
+                result = re.match(ex, line)
+                if result:
+                    key_path = result.group().split('=')[1]
+                    if not os.path.exists(key_path):
+                        asyncio.run(Client.login())
         # Else create file and ask for data
         else:
-            Client.login()
+            asyncio.run(Client.login())
 
 
     @staticmethod
-    def login():
+    async def login():
         print('INFO: No user account found! Please login first.')
-        for i in range(3):
-            print('Username:', end=' ')
-            username = str(input())
-            password = getpass.getpass()
-            passwordCheck = getpass.getpass()
-            if password == passwordCheck:
-                salt = uuid.uuid4().hex
-                with open(Client.USER_CONF, "w") as f:
-                        f.write(f"USERNAME={username}\n"\
-                                f"PASSWORD={str(hashlib.sha256(salt.encode() + password.encode()).hexdigest())}\n"\
-                                f"SALT={salt}\n"\
-                                f"DOWNLOAD_FOLDER={Path(os.path.expanduser('~/Downloads'))}")
-                print('INFO: You are now logged in as ' + username)
-                return
-            else:
-                print("Passwords does not match! ")
-                print("Try again!")
-        print("You failed 3 times, get the fuck out")
+        
+        print('Username:', end=' ')
+        username = str(input())
+        password = getpass.getpass()
+        usr_nonce = uuid.uuid4().hex
+        
+        # Open connection
+        try:
+            reader, writer = await asyncio.open_connection(Client.SERVER_IP, Client.SERVER_PORT)
+        except ConnectionRefusedError as e:
+            print(e)
+            print("Server probably ins't running!!!")
+            exit(1)
+
+        # Get public key from file
+        pub_key = RSA.import_key(open(Client.SERVER_PUBLIC_KEY).read())
+
+        # Create new RSA instance using pub_key
+        rsa_instance = PKCS1_OAEP.new(pub_key)
+
+        # Encrypt message E(username, usr-nonce) with pub.key
+        m = f"{username};{usr_nonce}".encode()
+        c = rsa_instance.encrypt(m)
+        
+        # Request start of login session
+        writer.write(f"LOGIN{Client.EOM}".encode())
+
+        # Receive answer: 'OK;Ready'
+        data = await reader.readuntil(Client.EOM.encode())
+        answer = data.decode()[:-1]
+
+        # If server is ready send E(username, usr-nonce)
+        if 'OK' in answer:
+            writer.write(str(len(c)).encode() + Client.EOM.encode())
+            writer.write(c)
+        
+        # Await E((usr-nonce, ser-nonce), hash(password)), salt
+        paylen = await reader.readuntil(Client.EOM.encode())
+        paylen = paylen.decode()[:-1]
+
+        c_len, tag_len, nonce_len, byte_salt_len = paylen.split(';')
+        c = await reader.read(int(c_len))
+        tag = await reader.read(int(tag_len))
+        nonce = await reader.read(int(nonce_len))
+        byte_salt = await reader.read(int(byte_salt_len))
+
+        # Decrypt D((usr-nonce, ser-nonce), hash(password)), salt
+        pass_hash = str(hashlib.sha256(byte_salt.hex().encode() + password.encode()).hexdigest())
+        byte_pass = bytes.fromhex(pass_hash)
+
+        aes_instance = AES.new(byte_pass, AES.MODE_EAX, nonce)
+        m = aes_instance.decrypt_and_verify(c, tag)
+
+        # Send E((usr-nonce, ser-nonce), pub.key)
+        c = rsa_instance.encrypt(m)
+        writer.write(str(len(c)).encode() + Client.EOM.encode())
+        writer.write(c)
+
+        # Await response with symetric key
+        paylen = await reader.readuntil(Client.EOM.encode())
+        paylen = paylen.decode()[:-1]
+
+        c_len, tag_len, nonce_len = paylen.split(';')
+        c = await reader.read(int(c_len))
+        tag = await reader.read(int(tag_len))
+        nonce = await reader.read(int(nonce_len))
+        
+        # Decrypt incoming aes_key
+        aes_instance = AES.new(byte_pass, AES.MODE_EAX, nonce)
+        aes_key = aes_instance.decrypt_and_verify(c, tag)
+
+        print('INFO: Received key ' + str(aes_key.hex()))
+
+        # Save aes_key to file
+        key_path = Client.USER_AES_KEY_BASE_PATH.joinpath('aes_' + username + '.key')
+        with open(key_path, "wb") as f:
+            f.write(aes_key)
+
+        # Update user settings with username, location of aes_key and default downloads folder
+        with open(Client.USER_CONF, "w") as f:
+            f.write(f"USERNAME={username}\n"\
+                    f"KEY_PATH={key_path}\n"\
+                    f"DOWNLOAD_FOLDER={Path(os.path.expanduser('~/Downloads'))}")
+
+        writer.close()
+        await writer.wait_closed()
+
+        print('INFO: You are now logged in as ' + username)
+        return
 
 
     @staticmethod
@@ -387,7 +471,7 @@ class Client:
     @staticmethod
     def change_user():
         # os.remove(Client.USER_CONF)
-        Client.login()
+        asyncio.run(Client.login())
 
     @staticmethod
     def flush_key():

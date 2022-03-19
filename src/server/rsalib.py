@@ -6,10 +6,9 @@ class Rsa:
 
   KEY_SIZE = 2048
   KEY_PATH = Path('server/_data/keys/')
-  PRIVATE_KEY_PASS = b"pivate-key-will-be-encrypted-with-this-pass"
   KEY_FILE_NAMES = (
-    'rsa.pem',
-    'rsa.pub'
+    'priv.pem',
+    'publ.pem'
   )
 
   @staticmethod
@@ -17,7 +16,7 @@ class Rsa:
     # Check if keypair exists in filesystem
     if not os.path.exists(Rsa.KEY_PATH / Rsa.KEY_FILE_NAMES[0]) or not os.path.exists(Rsa.KEY_PATH / Rsa.KEY_FILE_NAMES[1]):
       key = RSA.generate(Rsa.KEY_SIZE)
-      private_key = key.export_key(passphrase=Rsa.PRIVATE_KEY_PASS, pkcs=8, protection="scryptAndAES128-CBC")
+      private_key = key.export_key()
       file_out = open(Rsa.KEY_PATH / Rsa.KEY_FILE_NAMES[0], "wb")
       file_out.write(private_key)
       file_out.close()
@@ -34,3 +33,7 @@ class Rsa:
   @staticmethod
   def get_pub_key_location():
     return Rsa.KEY_PATH / Rsa.KEY_FILE_NAMES[1]
+  
+  @staticmethod
+  def get_priv_key_location():
+    return Rsa.KEY_PATH / Rsa.KEY_FILE_NAMES[0]
