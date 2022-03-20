@@ -9,6 +9,7 @@ from .loglib import Log
 from .db import File_index, User_db
 from .rsalib import Rsa
 from Crypto.PublicKey import RSA
+from Crypto.Random import get_random_bytes
 from Crypto.Cipher import PKCS1_OAEP, AES
 
 
@@ -45,34 +46,60 @@ class Server:
     async def handle_connection(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         """Asynch funcion for handling clients requests."""
 
+        # Recieve encrypted request from client
         data = await reader.readuntil(Server.EOM.encode())
         request = data.decode()[:-1]   # Decode and strip EOM symbol
+        
+        user_name, c_len, tag_len, pad_len, nonce_len = request.split(';')
+        c = await reader.read(int(c_len))
+        tag = await reader.read(int(tag_len))
+        pad = await reader.read(int(pad_len))
+        nonce = await reader.read(int(nonce_len))
 
-        if 'UPLOAD' in request:
-            # Request to upload file, structure: 'UPLOAD FILENAME USERNAME'
-            _, file_name, user_name = request.split(';')
-            await Server.recieve_file(file_name, user_name, reader, writer)
-        elif 'DOWNLOAD' in request:
-            # Request to download file, structure: 'DOWNLOAD FILENAME USERNAME'
-            _, file_name, user_name = request.split(';')
-            await Server.serve_file(file_name, user_name, reader, writer)
-        elif 'REMOVE' in request:
-            # Request to delete file, structure: 'REMOVE FILENAME USERNAME'
-            _, file_name, user_name = request.split(';')
-            await Server.remove_file(file_name, user_name, reader, writer)
-        elif 'LIST_DIR' in request:
-            # Request to list available file for download, structure: 'LIST_DIR'
-            _, user_name = request.split(';')
-            await Server.list_files(user_name, reader, writer)
-        elif 'GETKEY' in request:
-            # Request to get server public key
-            await Server.send_pubkey(reader, writer)
-        elif 'LOGIN' in request:
-            # Start login handshake with client
-            await Server.autenticate(reader, writer)
+        # Decrypt request with aes_key linked to the user
+        if User_db.name_exists(user_name):
+            aes_key = User_db.get_record(user_name)[2]
         else:
-            writer.write(f"UN-KNOWN request, use [UPLOAD, DOWNLOAD, LIST_DIR]{Server.EOM}".encode())
-            await writer.drain()
+            writer.write(f"ERROR;NotAuthenticatedError{Server.EOM}".encode())
+        aes_instance = AES.new(aes_key, AES.MODE_EAX, nonce)
+        m = aes_instance.decrypt_and_verify(c, tag)
+
+        # Get firt 8 bytes of message = pad
+        decryped_pad = m[0:8]
+
+        # Decide if pad was successfully decripted
+        if decryped_pad == pad:
+            # Authenticated
+            writer.write(f"OK;Authenticated{Server.EOM}".encode())
+            command = m[8:].decode()
+
+            if 'UPLOAD' in command:
+                # Request to upload file, structure: 'UPLOAD FILENAME USERNAME'
+                _, file_name, user_name = request.split(';')
+                await Server.recieve_file(file_name, user_name, reader, writer)
+            elif 'DOWNLOAD' in command:
+                # Request to download file, structure: 'DOWNLOAD FILENAME USERNAME'
+                _, file_name, user_name = request.split(';')
+                await Server.serve_file(file_name, user_name, reader, writer)
+            elif 'REMOVE' in command:
+                # Request to delete file, structure: 'REMOVE FILENAME USERNAME'
+                _, file_name, user_name = request.split(';')
+                await Server.remove_file(file_name, user_name, reader, writer)
+            elif 'LIST_DIR' in command:
+                # Request to list available file for download, structure: 'LIST_DIR'
+                await Server.list_files(user_name, reader, writer)
+            # elif 'GETKEY' in request: ––––> NO AUTH. NEEDED move to better location
+            #     # Request to get server public key
+            #     await Server.send_pubkey(reader, writer)
+            # elif 'LOGIN' in request:
+            #     # Start login handshake with client
+            #     await Server.autenticate(reader, writer)
+            else:
+                writer.write(f"UN-KNOWN request, use [UPLOAD, DOWNLOAD, LIST_DIR]{Server.EOM}".encode())
+                await writer.drain()
+        else:
+            # Not Authenticated
+            writer.write(f"ERROR;NotAuthenticatedError{Server.EOM}".encode())
 
         writer.close()
         await writer.wait_closed()
@@ -193,15 +220,19 @@ class Server:
     @staticmethod
     async def list_files(user_name:str, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         """Send available files for download."""
-        
-        if User_db.name_exists(user_name):
-            # User authenticated based on username
-            writer.write(f"OK;Authenticated{Server.EOM}".encode())
-            # Send availabe files
-            writer.write(pickle.dumps(File_index.return_all()))
-        else:
-            #User not_authenticated
-            writer.write(f"ERROR;NotAuthenticatedError{Server.EOM}".encode())
+
+        # Encrypt data before sending
+        pad = get_random_bytes(8)
+        m = pad + pickle.dumps(File_index.return_all())
+        aes_key = User_db.get_record(user_name)[2]
+        aes_instance = AES.new(aes_key, AES.MODE_EAX)
+        c, tag = aes_instance.encrypt_and_digest(m)
+
+        payload = (c, tag, pad, aes_instance.nonce)
+
+        # Send data
+        writer.write(f"{len(c)};{len(tag)};{len(pad)};{len(aes_instance.nonce)}".encode() + Server.EOM.encode())
+        writer.writelines(payload)
 
     @staticmethod
     async def send_pubkey(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
@@ -287,4 +318,3 @@ class Server:
 
         else:
             print(f'WARNING: User {username} has failed to loged in from client.')
-            

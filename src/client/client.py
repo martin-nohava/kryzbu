@@ -10,6 +10,7 @@ import tqdm
 import pickle
 import getpass
 from Crypto.PublicKey import RSA
+from Crypto.Random import get_random_bytes
 from Crypto.Cipher import PKCS1_OAEP, AES
 
 class Client:
@@ -22,18 +23,32 @@ class Client:
     USER_AES_KEY_BASE_PATH = Path('client/_data/keys')
     EOM = '\n' # End of Message sign
 
+    @staticmethod
+    async def open_connection():
+        """Open connection to the server. Returns 'reader' and 'writer' objects."""
+        try:
+            reader, writer = await asyncio.open_connection(Client.SERVER_IP, Client.SERVER_PORT)
+            return reader, writer
+        except ConnectionRefusedError as e:
+            print(e)
+            print("ERROR: Failed to contact server!")
+            exit(1)
+    
+    @staticmethod
+    def load_aes_key() -> bytes:
+        file_path = Client.USER_AES_KEY_BASE_PATH.joinpath('aes_' + Client.get_username() + '.key')
+        with open(file_path, "rb") as f:  
+            aes_key = f.read()
+            return aes_key
+                
 
     @staticmethod
     async def upload(file_path: str):
         """Upload file to a server."""
 
         if os.path.exists(file_path):
-            try:
-                reader, writer = await asyncio.open_connection(Client.SERVER_IP, Client.SERVER_PORT)
-            except ConnectionRefusedError as e:
-                print(e)
-                print("Server probably ins't running!!!")
-                exit(1)
+            
+            reader, writer = await Client.open_connection()
  
             file_name = os.path.basename(file_path)
 
@@ -79,12 +94,7 @@ class Client:
     async def download(file_name: str):
         """Download file from a server."""
 
-        try:
-            reader, writer = await asyncio.open_connection(Client.SERVER_IP, Client.SERVER_PORT)
-        except ConnectionRefusedError as e:
-            print(e)
-            print("Server probably ins't running!!!")
-            exit(1)
+        reader, writer = await Client.open_connection()
 
         # Send DOWNLOAD request
         writer.write(f"DOWNLOAD;{file_name};{Client.get_username()}{Client.EOM}".encode())
@@ -131,12 +141,7 @@ class Client:
     async def remove(file_name: str):
         """Remove file from a server."""
 
-        try:
-            reader, writer = await asyncio.open_connection(Client.SERVER_IP, Client.SERVER_PORT)
-        except ConnectionRefusedError as e:
-            print(e)
-            print("Server probably ins't running!!!")
-            exit(1)
+        reader, writer = await Client.open_connection()
 
         # Send REMOVE request
         writer.write(f"REMOVE;{file_name};{Client.get_username()}{Client.EOM}".encode())
@@ -175,15 +180,20 @@ class Client:
     async def list_files(detailed: bool):
         """List stored files on server. True: detailed view, False: basic view"""
 
-        try:
-            reader, writer = await asyncio.open_connection(Client.SERVER_IP, Client.SERVER_PORT)
-        except ConnectionRefusedError as e:
-            print(e)
-            print("Server probably ins't running!!!")
-            exit(1)
+        reader, writer = await Client.open_connection()
 
         # Send LIST_DIR request
-        writer.write(f"LIST_DIR;{Client.get_username()}{Client.EOM}".encode())
+        pad = get_random_bytes(8)
+        m = pad + "LIST_DIR".encode()
+        aes_key = Client.load_aes_key()
+        aes_instance = AES.new(aes_key, AES.MODE_EAX)
+        c, tag = aes_instance.encrypt_and_digest(m)
+
+        payload = (c, tag, pad, aes_instance.nonce)
+
+        # Send data
+        writer.write(f"{Client.get_username()};{len(c)};{len(tag)};{len(pad)};{len(aes_instance.nonce)}".encode() + Client.EOM.encode())
+        writer.writelines(payload)
 
         # Receive answer: 'OK;Authenticated' or 'ERROR;NotAuthenticatedError'
         data = await reader.readuntil(Client.EOM.encode())
@@ -191,7 +201,25 @@ class Client:
 
         if 'OK' in answer:
             # Answer: 'OK;Authenticated'
-            list = pickle.loads(await reader.read())
+            paylen = await reader.readuntil(Client.EOM.encode())
+            paylen = paylen.decode()[:-1]
+
+            c_len, tag_len, pad_len, nonce_len = paylen.split(';')
+            c = await reader.read(int(c_len))
+            tag = await reader.read(int(tag_len))
+            pad = await reader.read(int(pad_len))
+            nonce = await reader.read(int(nonce_len))
+
+            # Decrypt answer from server
+            aes_instance = AES.new(aes_key, AES.MODE_EAX, nonce)
+            m = aes_instance.decrypt_and_verify(c, tag)
+
+            # Verify data correctly decrypted
+            decryped_pad = m[0:8]
+
+            if decryped_pad == pad:
+                list = pickle.loads(m[8:])
+                
             if detailed:
                 # Detailed list
                 print ("{:<15} {:<12} {:<12} {:<15}".format('Owner','Created','Downloads', 'File'))
@@ -246,12 +274,8 @@ class Client:
     async def get_server_publickey():
         if not os.path.exists(Client.SERVER_PUBLIC_KEY):
             print('INFO: No server key found, requesting new...')
-            try:
-                reader, writer = await asyncio.open_connection(Client.SERVER_IP, Client.SERVER_PORT)
-            except ConnectionRefusedError as e:
-                print(e)
-                print("Server probably ins't running!!!")
-                exit(1)
+
+            reader, writer = await Client.open_connection()
 
             # Send GETKEY request
             writer.write(f"GETKEY{Client.EOM}".encode())
@@ -315,12 +339,7 @@ class Client:
         usr_nonce = uuid.uuid4().hex
         
         # Open connection
-        try:
-            reader, writer = await asyncio.open_connection(Client.SERVER_IP, Client.SERVER_PORT)
-        except ConnectionRefusedError as e:
-            print(e)
-            print("Server probably ins't running!!!")
-            exit(1)
+        reader, writer = await Client.open_connection()
 
         # Get public key from file
         pub_key = RSA.import_key(open(Client.SERVER_PUBLIC_KEY).read())
