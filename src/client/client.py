@@ -40,11 +40,25 @@ class Client:
         with open(file_path, "rb") as f:  
             aes_key = f.read()
             return aes_key
-                
+
+    @staticmethod
+    def send_request(type: str, writer: asyncio.StreamWriter, file_name: str ='empty') -> None:
+        # Prepare request
+        pad = get_random_bytes(8)
+        m = pad + f"{type};{file_name}".encode()
+        aes_key = Client.load_aes_key()
+        aes_instance = AES.new(aes_key, AES.MODE_EAX)
+        c, tag = aes_instance.encrypt_and_digest(m)
+
+        payload = (c, tag, pad, aes_instance.nonce)
+
+        # Send request
+        writer.write(f"{Client.get_username()};{len(c)};{len(tag)};{len(pad)};{len(aes_instance.nonce)}".encode() + Client.EOM.encode())
+        writer.writelines(payload)
 
     @staticmethod
     async def upload(file_path: str):
-        """Upload file to a server."""
+        """Upload file to the server."""
 
         if os.path.exists(file_path):
             
@@ -53,7 +67,7 @@ class Client:
             file_name = os.path.basename(file_path)
 
             # Send UPLOAD request
-            writer.write(f"UPLOAD;{file_name};{Client.get_username()}{Client.EOM}".encode())
+            Client.send_request("UPLOAD", writer, file_name)
 
             # Receive aswer
             data = await reader.readuntil(Client.EOM.encode())
@@ -61,11 +75,36 @@ class Client:
 
             if 'OK' in answer:
                 # Answer: 'OK;Authenticated'
-                file_size = os.path.getsize(file_path)
+                pad = get_random_bytes(8)
+                with open(file_path, "rb") as f:
+                    m = pad + f.read()
+                # Encrypt file
+                aes_instance = AES.new(Client.load_aes_key(), AES.MODE_EAX)
+                c, tag = aes_instance.encrypt_and_digest(m)
+
+                payload = (c, tag, pad, aes_instance.nonce)
+
+                print(len(c))
+                print(len(tag))
+                print(len(pad))
+                print(len(aes_instance.nonce))
+
+                TEMP_FILE = Path("client/_data/cache.temp")
+                if os.path.exists(TEMP_FILE):
+                    os.remove(TEMP_FILE)
+                with open(TEMP_FILE, "ab") as f:
+                    for data in payload:
+                        f.write(data)
+
+                # Send signaling
+                writer.write(f"{len(c)};{len(tag)};{len(pad)};{len(aes_instance.nonce)}".encode() + Client.EOM.encode())
+                await writer.drain()
+                # Get size
+                file_size = os.path.getsize(TEMP_FILE)
                 progress = tqdm.tqdm(range(file_size), f"Sending {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
 
                 # Send file
-                with open(file_path, "rb") as f:
+                with open(TEMP_FILE, "rb") as f:
                     while True:
                         bytes_read = f.read(1024)
                         if not bytes_read:
@@ -86,8 +125,8 @@ class Client:
 
         else:
             # Client FileNotFoundError
-            print(f"File '{file_path}' can't be reached, No action taken...")
-            print(f"Check correct file name and path and try again ")
+            print(f"ERROR: File '{file_path}' can't be reached! No action taken.")
+            print(f"Check correct file name and path and try again.")
 
 
     @staticmethod
@@ -180,20 +219,11 @@ class Client:
     async def list_files(detailed: bool):
         """List stored files on server. True: detailed view, False: basic view"""
 
+        # Open connection with server
         reader, writer = await Client.open_connection()
 
-        # Send LIST_DIR request
-        pad = get_random_bytes(8)
-        m = pad + "LIST_DIR".encode()
-        aes_key = Client.load_aes_key()
-        aes_instance = AES.new(aes_key, AES.MODE_EAX)
-        c, tag = aes_instance.encrypt_and_digest(m)
-
-        payload = (c, tag, pad, aes_instance.nonce)
-
-        # Send data
-        writer.write(f"{Client.get_username()};{len(c)};{len(tag)};{len(pad)};{len(aes_instance.nonce)}".encode() + Client.EOM.encode())
-        writer.writelines(payload)
+        # Send request to server
+        Client.send_request("LIST_DIR", writer)
 
         # Receive answer: 'OK;Authenticated' or 'ERROR;NotAuthenticatedError'
         data = await reader.readuntil(Client.EOM.encode())
@@ -204,6 +234,7 @@ class Client:
             paylen = await reader.readuntil(Client.EOM.encode())
             paylen = paylen.decode()[:-1]
 
+            # Recieve encrypted data
             c_len, tag_len, pad_len, nonce_len = paylen.split(';')
             c = await reader.read(int(c_len))
             tag = await reader.read(int(tag_len))
@@ -211,12 +242,11 @@ class Client:
             nonce = await reader.read(int(nonce_len))
 
             # Decrypt answer from server
-            aes_instance = AES.new(aes_key, AES.MODE_EAX, nonce)
+            aes_instance = AES.new(Client.load_aes_key(), AES.MODE_EAX, nonce)
             m = aes_instance.decrypt_and_verify(c, tag)
 
-            # Verify data correctly decrypted
+            # Verify data are correctly decrypted
             decryped_pad = m[0:8]
-
             if decryped_pad == pad:
                 list = pickle.loads(m[8:])
                 

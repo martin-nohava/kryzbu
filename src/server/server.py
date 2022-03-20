@@ -71,15 +71,13 @@ class Server:
         if decryped_pad == pad:
             # Authenticated
             writer.write(f"OK;Authenticated{Server.EOM}".encode())
-            command = m[8:].decode()
+            command, file_name = m[8:].decode().split(';')
 
             if 'UPLOAD' in command:
                 # Request to upload file, structure: 'UPLOAD FILENAME USERNAME'
-                _, file_name, user_name = request.split(';')
                 await Server.recieve_file(file_name, user_name, reader, writer)
             elif 'DOWNLOAD' in command:
                 # Request to download file, structure: 'DOWNLOAD FILENAME USERNAME'
-                _, file_name, user_name = request.split(';')
                 await Server.serve_file(file_name, user_name, reader, writer)
             elif 'REMOVE' in command:
                 # Request to delete file, structure: 'REMOVE FILENAME USERNAME'
@@ -133,28 +131,57 @@ class Server:
     @staticmethod
     async def recieve_file(file_name: str, user_name: str, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         """Receive file from a client."""
-
-        if User_db.name_exists(user_name):
-            # User authenticated based on username
-            writer.write(f"OK;Authenticated{Server.EOM}".encode())
-            await writer.drain()
             
-            file_path = Server.SERVER_FOLDER / file_name
+        file_path = Server.SERVER_FOLDER / file_name
 
-            with open(file_path, "wb") as f:
+        # Recieve encrypted request from client
+        data = await reader.readuntil(Server.EOM.encode())
+        request = data.decode()[:-1]   # Decode and strip EOM symbol
+        
+        print(request)
+
+        c_len, tag_len, pad_len, nonce_len = request.split(';')
+
+        TEMP_FILE = Path("server/_data/cache_" + user_name + ".temp")
+        with open(TEMP_FILE, "wb") as f:
                 while True:
                     bytes_read = await reader.read()
                     if not bytes_read:
                         break
                     f.write(bytes_read)
-            
+
+        with open(TEMP_FILE, "rb") as f:
+            bytes = f.read()
+
+        c = bytes[:int(c_len)]
+        tag = bytes[int(c_len):int(c_len) + int(tag_len)]
+        pad = bytes[int(c_len) + int(tag_len):int(c_len) + int(tag_len) + int(pad_len)]
+        nonce = bytes[int(c_len) + int(tag_len) + int(pad_len):int(c_len) + int(tag_len) + int(pad_len) + int(nonce_len)]
+
+        print(len(c))
+        print(len(tag))
+        print(len(pad))
+        print(len(nonce))
+
+        # Decrypt request with aes_key linked to the user
+        aes_instance = AES.new(User_db.get_record(user_name)[2], AES.MODE_EAX, nonce)
+        m = aes_instance.decrypt_and_verify(c, tag)
+
+        # Get firt 8 bytes of message = pad
+        decryped_pad = m[0:8]
+
+        # Decide if pad was successfully decripted
+        if decryped_pad == pad:
+            # Save decrypted data to disk
+            with open(file_path, "wb") as f:
+                # while True:
+                #     bytes_read = await reader.read()
+                #     if not bytes_read:
+                #         break
+                f.write(m[8:])
+        
             Log.event(Log.Event.UPLOAD, 0, [file_name, user_name])
             File_index.add(file_name, user_name)
-        else:
-            # User not-authenticated
-            writer.write(f"ERROR;NotAuthenticated{Server.EOM}".encode())
-            await writer.drain()
-
 
     @staticmethod
     async def serve_file(file_name: str, user_name: str, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
