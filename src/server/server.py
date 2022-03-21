@@ -217,38 +217,30 @@ class Server:
     async def serve_file(file_name: str, user_name: str, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         """Send file to a client."""
 
-        if User_db.name_exists(user_name):
-            # User authenticated based on username
-            file_path = os.path.join(Server.SERVER_FOLDER, file_name)
+        # User authenticated based on username
+        file_path = os.path.join(Server.SERVER_FOLDER, file_name)
 
-            if os.path.exists(file_path):
-                # Inform client about authentication
-                writer.write(f"OK;Authenticated{Server.EOM}".encode())
-                await writer.drain()
-                
-                # Send file info
-                file_size = os.path.getsize(file_path)
-                writer.write(f"{file_name};{file_size}{Server.EOM}".encode())
-                await writer.drain()
+        if os.path.exists(file_path):
+            # Send file info
+            file_size = os.path.getsize(file_path)
+            writer.write(f"{file_name};{file_size}{Server.EOM}".encode())
+            await writer.drain()
 
 
-                # Send file
-                with open(file_path, "rb") as f:
-                    while True:
-                        bytes_read = f.read(1024)
-                        if not bytes_read:
-                            break
-                        writer.write(bytes_read)
-                        await writer.drain()
+            # Send file
+            with open(file_path, "rb") as f:
+                while True:
+                    bytes_read = f.read(1024)
+                    if not bytes_read:
+                        break
+                    writer.write(bytes_read)
+                    await writer.drain()
 
-                Log.event(Log.Event.DOWNLOAD, 0, [file_name, user_name])
-                File_index.download(file_name)
-            else:
-                # Requested file does NOT exist
-                writer.write(f"ERROR;FileNotFoundError{Server.EOM}".encode())
+            Log.event(Log.Event.DOWNLOAD, 0, [file_name, user_name])
+            File_index.download(file_name)
         else:
-            # User not-authenticated
-            writer.write(f"ERROR;NotAuthenticatedError{Server.EOM}".encode())
+            # Requested file does NOT exist
+            writer.write(f"ERROR;FileNotFoundError{Server.EOM}".encode())
 
 
     @staticmethod
