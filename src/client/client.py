@@ -75,43 +75,85 @@ class Client:
 
             if 'OK' in answer:
                 # Answer: 'OK;Authenticated'
+
+                # Prepare AES instance
                 pad = get_random_bytes(8)
-                with open(file_path, "rb") as f:
-                    m = pad + f.read()
-                # Encrypt file
                 aes_instance = AES.new(Client.load_aes_key(), AES.MODE_EAX)
-                c, tag = aes_instance.encrypt_and_digest(m)
 
-                payload = (c, tag, pad, aes_instance.nonce)
+                # Prepare loading bar
+                file_size = os.path.getsize(file_path)
+                progress = tqdm.tqdm(range(len(pad) + file_size), f"Sending {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
 
-                print(len(c))
+                # Send signaling
+                print(file_size)
+                print(f"{len(pad) + file_size};{16};{len(pad)};{len(aes_instance.nonce)}")
+                writer.write(f"{len(pad) + file_size};{16};{len(pad)};{len(aes_instance.nonce)}".encode() + Client.EOM.encode())
+                await writer.drain()
+
+                # Open file for reading
+                with open(file_path, "rb") as f:
+                    i = 0
+                    while True:
+                        # On first run
+                        if i == 0:
+                            # Ad pad as first 8 bytes of file
+                            bytes_read = f.read(1024)
+                            c = aes_instance.encrypt(pad + bytes_read)
+                            progress.update(len(pad) + len(bytes_read))
+                            i = 1
+                        # On any other run
+                        else:
+                            # Read chunk of data
+                            bytes_read = f.read(1024)
+                            # On last tun
+                            if not bytes_read:
+                                # Create MAC tag
+                                tag = aes_instance.digest()
+                                break
+                            # Encrypt chunk of data
+                            c = aes_instance.encrypt(bytes_read)
+                            progress.update(len(bytes_read))
+                            # Send data
+                        writer.write(c)
+                        await writer.drain()
+
+                # with open(file_path, "rb") as f:
+                #     m = pad + f.read()
+                # Encrypt file
+                
+                # c, tag = aes_instance.encrypt_and_digest(m)
+
+                payload = (tag, pad, aes_instance.nonce)
+
                 print(len(tag))
                 print(len(pad))
                 print(len(aes_instance.nonce))
 
-                TEMP_FILE = Path("client/_data/cache.temp")
-                if os.path.exists(TEMP_FILE):
-                    os.remove(TEMP_FILE)
-                with open(TEMP_FILE, "ab") as f:
-                    for data in payload:
-                        f.write(data)
+                writer.writelines(payload)
 
-                # Send signaling
-                writer.write(f"{len(c)};{len(tag)};{len(pad)};{len(aes_instance.nonce)}".encode() + Client.EOM.encode())
-                await writer.drain()
-                # Get size
-                file_size = os.path.getsize(TEMP_FILE)
-                progress = tqdm.tqdm(range(file_size), f"Sending {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
+                # TEMP_FILE = Path("client/_data/cache.temp")
+                # if os.path.exists(TEMP_FILE):
+                #     os.remove(TEMP_FILE)
+                # with open(TEMP_FILE, "ab") as f:
+                #     for data in payload:
+                #         f.write(data)
+
+                # # Send signaling
+                # writer.write(f"{len(c)};{len(tag)};{len(pad)};{len(aes_instance.nonce)}".encode() + Client.EOM.encode())
+                # await writer.drain()
+                # # Get size
+                # file_size = os.path.getsize(TEMP_FILE)
+                # progress = tqdm.tqdm(range(file_size), f"Sending {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
 
                 # Send file
-                with open(TEMP_FILE, "rb") as f:
-                    while True:
-                        bytes_read = f.read(1024)
-                        if not bytes_read:
-                            break
-                        progress.update(len(bytes_read))
-                        writer.write(bytes_read)
-                        await writer.drain()
+                # with open(TEMP_FILE, "rb") as f:
+                #     while True:
+                #         bytes_read = f.read(1024)
+                #         if not bytes_read:
+                #             break
+                #         progress.update(len(bytes_read))
+                #         writer.write(bytes_read)
+                #         await writer.drain()
 
             elif 'NotAuthenticated' in answer:
                 # Answer: 'ERROR;NotAuthenticated'
