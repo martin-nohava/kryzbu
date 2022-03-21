@@ -191,8 +191,8 @@ class Client:
 
         reader, writer = await Client.open_connection()
 
-        # Send REMOVE request
-        writer.write(f"REMOVE;{file_name};{Client.get_username()}{Client.EOM}".encode())
+        # Send request to server
+        Client.send_request("REMOVE", writer, file_name)
 
         # Receive answer: 'OK;Authenticated' or 'ERROR;FileNotFoundError' or 'ERROR;NotAuthenticatedError'
         data = await reader.readuntil(Client.EOM.encode())

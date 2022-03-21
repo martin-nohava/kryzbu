@@ -49,6 +49,14 @@ class Server:
         # Recieve encrypted request from client
         data = await reader.readuntil(Server.EOM.encode())
         request = data.decode()[:-1]   # Decode and strip EOM symbol
+
+        # Requests not requireing authentication
+        if 'GETKEY' in request:
+            # Request to get server public key
+            await Server.send_pubkey(reader, writer)
+        elif 'LOGIN' in request:
+            # Start login handshake with client
+            await Server.autenticate(reader, writer)
         
         user_name, c_len, tag_len, pad_len, nonce_len = request.split(';')
         c = await reader.read(int(c_len))
@@ -81,17 +89,10 @@ class Server:
                 await Server.serve_file(file_name, user_name, reader, writer)
             elif 'REMOVE' in command:
                 # Request to delete file, structure: 'REMOVE FILENAME USERNAME'
-                _, file_name, user_name = request.split(';')
                 await Server.remove_file(file_name, user_name, reader, writer)
             elif 'LIST_DIR' in command:
                 # Request to list available file for download, structure: 'LIST_DIR'
                 await Server.list_files(user_name, reader, writer)
-            # elif 'GETKEY' in request: ––––> NO AUTH. NEEDED move to better location
-            #     # Request to get server public key
-            #     await Server.send_pubkey(reader, writer)
-            # elif 'LOGIN' in request:
-            #     # Start login handshake with client
-            #     await Server.autenticate(reader, writer)
             else:
                 writer.write(f"UN-KNOWN request, use [UPLOAD, DOWNLOAD, LIST_DIR]{Server.EOM}".encode())
                 await writer.drain()
