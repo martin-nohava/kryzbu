@@ -85,8 +85,7 @@ class Client:
                 progress = tqdm.tqdm(range(len(pad) + file_size), f"Sending {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
 
                 # Send signaling
-                print(file_size)
-                print(f"{len(pad) + file_size};{16};{len(pad)};{len(aes_instance.nonce)}")
+                # c_len, tag_len, pad_len, nonce_len
                 writer.write(f"{len(pad) + file_size};{16};{len(pad)};{len(aes_instance.nonce)}".encode() + Client.EOM.encode())
                 await writer.drain()
 
@@ -117,43 +116,11 @@ class Client:
                         writer.write(c)
                         await writer.drain()
 
-                # with open(file_path, "rb") as f:
-                #     m = pad + f.read()
-                # Encrypt file
-                
-                # c, tag = aes_instance.encrypt_and_digest(m)
-
                 payload = (tag, pad, aes_instance.nonce)
 
-                print(len(tag))
-                print(len(pad))
-                print(len(aes_instance.nonce))
-
+                # Send rest of the required data
                 writer.writelines(payload)
-
-                # TEMP_FILE = Path("client/_data/cache.temp")
-                # if os.path.exists(TEMP_FILE):
-                #     os.remove(TEMP_FILE)
-                # with open(TEMP_FILE, "ab") as f:
-                #     for data in payload:
-                #         f.write(data)
-
-                # # Send signaling
-                # writer.write(f"{len(c)};{len(tag)};{len(pad)};{len(aes_instance.nonce)}".encode() + Client.EOM.encode())
-                # await writer.drain()
-                # # Get size
-                # file_size = os.path.getsize(TEMP_FILE)
-                # progress = tqdm.tqdm(range(file_size), f"Sending {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
-
-                # Send file
-                # with open(TEMP_FILE, "rb") as f:
-                #     while True:
-                #         bytes_read = f.read(1024)
-                #         if not bytes_read:
-                #             break
-                #         progress.update(len(bytes_read))
-                #         writer.write(bytes_read)
-                #         await writer.drain()
+                await writer.drain()
 
             elif 'NotAuthenticated' in answer:
                 # Answer: 'ERROR;NotAuthenticated'

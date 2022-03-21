@@ -137,11 +137,10 @@ class Server:
         # Recieve encrypted request from client
         data = await reader.readuntil(Server.EOM.encode())
         request = data.decode()[:-1]   # Decode and strip EOM symbol
-        
-        print(request)
 
         c_len, tag_len, pad_len, nonce_len = request.split(';')
 
+        # Save encrypted data to disk, plus tag, pad and nonce
         TEMP_FILE = Path("server/_data/cache_" + user_name + ".temp")
         with open(TEMP_FILE, "wb") as f:
                 while True:
@@ -150,38 +149,68 @@ class Server:
                         break
                     f.write(bytes_read)
 
-        with open(TEMP_FILE, "rb") as f:
-            bytes = f.read()
+        # Extract tag, pad and nonce from file
+        f = os.open(TEMP_FILE, os.O_RDONLY)
 
-        c = bytes[:int(c_len)]
-        tag = bytes[int(c_len):int(c_len) + int(tag_len)]
-        pad = bytes[int(c_len) + int(tag_len):int(c_len) + int(tag_len) + int(pad_len)]
-        nonce = bytes[int(c_len) + int(tag_len) + int(pad_len):int(c_len) + int(tag_len) + int(pad_len) + int(nonce_len)]
+        os.lseek(f, int(c_len), 0)
+        tag = os.read(f, int(tag_len))
+        
+        os.lseek(f, int(c_len) + int(tag_len), 0)
+        pad = os.read(f, int(pad_len))
+        print(pad)
 
-        print(len(c))
-        print(len(tag))
-        print(len(pad))
-        print(len(nonce))
+        os.lseek(f, int(c_len) + int(tag_len) + int(pad_len), 0)
+        nonce = os.read(f, int(nonce_len))
 
-        # Decrypt request with aes_key linked to the user
+        os.close(f)
+
+        # Extract decryped_pad
+        f = os.open(TEMP_FILE, os.O_RDONLY)
+
+        os.lseek(f, 0, 0)
+        encrypter_pad = os.read(f, int(pad_len))
         aes_instance = AES.new(User_db.get_record(user_name)[2], AES.MODE_EAX, nonce)
-        m = aes_instance.decrypt_and_verify(c, tag)
+        decryped_pad = aes_instance.decrypt(encrypter_pad)
 
-        # Get firt 8 bytes of message = pad
-        decryped_pad = m[0:8]
-
+        os.close(f)
+        
         # Decide if pad was successfully decripted
         if decryped_pad == pad:
-            # Save decrypted data to disk
-            with open(file_path, "wb") as f:
-                # while True:
-                #     bytes_read = await reader.read()
-                #     if not bytes_read:
-                #         break
-                f.write(m[8:])
-        
+            # Decrypt rest of the file and save it
+            # Open new destination file df
+            with open(file_path, "wb") as df:
+                total_bytes_read = 0
+                # Open temp file as source file sf
+                sf = os.open(TEMP_FILE, os.O_RDONLY)
+                # Skip pad
+                os.lseek(sf, int(pad_len), 0)
+                while True:
+                    # How much we want to read (1024)
+                    total_bytes_read += 1024
+                    # If this amount is still available to read, read it
+                    if total_bytes_read % (int(c_len) - int(pad_len)) == total_bytes_read:
+                        # Read bytes
+                        bytes_read = os.read(sf, 1024)
+                        # Decrypt
+                        m = aes_instance.decrypt(bytes_read)
+                        # Save to new file df
+                        df.write(m)
+                    else:
+                        # Read only remaining bytes
+                        remaining_bytes = total_bytes_read % (int(c_len) - int(pad_len))
+                        bytes_read = os.read(sf, remaining_bytes + 1)
+                        # Decrypt
+                        m = aes_instance.decrypt(bytes_read)
+                        # Save to new file df
+                        df.write(m)
+                        break
+                os.close(sf)
+
             Log.event(Log.Event.UPLOAD, 0, [file_name, user_name])
             File_index.add(file_name, user_name)
+
+        if os.path.exists(TEMP_FILE):
+            os.remove(TEMP_FILE)
 
     @staticmethod
     async def serve_file(file_name: str, user_name: str, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
