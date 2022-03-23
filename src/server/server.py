@@ -1,9 +1,11 @@
 # Server side
 
+from audioop import add
 import os
 import pickle
 import asyncio
 from pathlib import Path
+import ssl
 from .loglib import Log
 from .db import File_index, User_db
 from .rsalib import Rsa
@@ -28,8 +30,13 @@ class Server:
 
     @staticmethod
     async def run():
+        print(os.getcwd())
+        ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+        ssl_context.check_hostname = False
+        ssl_context.load_cert_chain('server.cert', 'server.key')
+
         server = await asyncio.start_server(
-            Server.handle_connection, Server.IP, Server.PORT)
+            Server.handle_connection, Server.IP, Server.PORT, ssl=ssl_context)
 
         addrs = ', '.join(str(sock.getsockname()) for sock in server.sockets)
         print(f'Serving on {addrs}')
@@ -44,6 +51,9 @@ class Server:
 
         data = await reader.readuntil(Server.EOM.encode())
         request = data.decode()[:-1]   # Decode and strip EOM symbol
+
+        addr = writer.get_extra_info('peername')
+        print(f"Incoming request: '{request}', from: {addr}")
 
         if 'UPLOAD' in request:
             # Request to upload file, structure: 'UPLOAD FILENAME USERNAME'

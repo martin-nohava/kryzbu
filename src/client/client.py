@@ -5,6 +5,8 @@ import asyncio
 import os
 import re
 from pathlib import Path
+import ssl
+from typing import Tuple
 import uuid
 import tqdm
 import pickle
@@ -19,18 +21,28 @@ class Client:
     SERVER_PUBLIC_KEY = Path('client/_data/serkey/rsa.pub')
     EOM = '\n' # End of Message sign
 
+    @staticmethod
+    async def open_connection() -> Tuple:
+        """Open connection to the server. 
+        
+        Returns 'reader' and 'writer' objects."""
+
+        try:
+            ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH, cafile='server.cert')
+            ssl_context.check_hostname = False      # No common name in creation -> need False
+            reader, writer = await asyncio.open_connection(Client.SERVER_IP, Client.SERVER_PORT, ssl=ssl_context)
+            return reader, writer
+        except ConnectionRefusedError as e:
+            print(e)
+            print("ERROR: Failed to contact server!")
+            exit(1)
 
     @staticmethod
     async def upload(file_path: str):
         """Upload file to a server."""
 
         if os.path.exists(file_path):
-            try:
-                reader, writer = await asyncio.open_connection(Client.SERVER_IP, Client.SERVER_PORT)
-            except ConnectionRefusedError as e:
-                print(e)
-                print("Server probably ins't running!!!")
-                exit(1)
+            reader, writer = await Client.open_connection()
  
             file_name = os.path.basename(file_path)
 
@@ -76,12 +88,7 @@ class Client:
     async def download(file_name: str):
         """Download file from a server."""
 
-        try:
-            reader, writer = await asyncio.open_connection(Client.SERVER_IP, Client.SERVER_PORT)
-        except ConnectionRefusedError as e:
-            print(e)
-            print("Server probably ins't running!!!")
-            exit(1)
+        reader, writer = await Client.open_connection()
 
         # Send DOWNLOAD request
         writer.write(f"DOWNLOAD;{file_name};{Client.get_username()}{Client.EOM}".encode())
@@ -128,13 +135,8 @@ class Client:
     async def remove(file_name: str):
         """Remove file from a server."""
 
-        try:
-            reader, writer = await asyncio.open_connection(Client.SERVER_IP, Client.SERVER_PORT)
-        except ConnectionRefusedError as e:
-            print(e)
-            print("Server probably ins't running!!!")
-            exit(1)
-
+        reader, writer = await Client.open_connection()
+        
         # Send REMOVE request
         writer.write(f"REMOVE;{file_name};{Client.get_username()}{Client.EOM}".encode())
 
@@ -172,13 +174,8 @@ class Client:
     async def list_files(detailed: bool):
         """List stored files on server. True: detailed view, False: basic view"""
 
-        try:
-            reader, writer = await asyncio.open_connection(Client.SERVER_IP, Client.SERVER_PORT)
-        except ConnectionRefusedError as e:
-            print(e)
-            print("Server probably ins't running!!!")
-            exit(1)
-
+        reader, writer = await Client.open_connection()
+        
         # Send LIST_DIR request
         writer.write(f"LIST_DIR;{Client.get_username()}{Client.EOM}".encode())
 
@@ -243,13 +240,9 @@ class Client:
     async def get_server_publickey():
         if not os.path.exists(Client.SERVER_PUBLIC_KEY):
             print('INFO: No server key found, requesting new...')
-            try:
-                reader, writer = await asyncio.open_connection(Client.SERVER_IP, Client.SERVER_PORT)
-            except ConnectionRefusedError as e:
-                print(e)
-                print("Server probably ins't running!!!")
-                exit(1)
 
+            reader, writer = await Client.open_connection()
+            
             # Send GETKEY request
             writer.write(f"GETKEY{Client.EOM}".encode())
 
