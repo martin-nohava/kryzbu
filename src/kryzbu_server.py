@@ -13,6 +13,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("-l", "--list", help="list all users", action="store_true")
 parser.add_argument("--remove" , metavar="username", nargs='+', help="remove users from user database")
 parser.add_argument("--register", metavar="spec", nargs='+', help="register new user to server", action="extend")
+parser.add_argument("-v", "--verbose", action='count', default=0)
 args = parser.parse_args()
 
 if args.register:
@@ -30,5 +31,6 @@ elif args.list:
     User_db.show_all()
 else:
     print('[*] Kryzbu server starting...')
+    server.Server.VERBOSITY = args.verbose
     server.Server.start()
 

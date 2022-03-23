@@ -14,10 +14,11 @@ from .rsalib import Rsa
 class Server:
     """Implementation of a Kryzbu server (Cryptographically Secure Storage)."""
 
-    IP = "127.0.0.1"
-    PORT = 60606
-    EOM = '\n' # End of Message sign, should be same as in client.py
-    SERVER_FOLDER = Path("server/_data/files/") # Universal Path object for multi OS path declaration
+    IP: str = "127.0.0.1"
+    PORT: int = 60606
+    EOM: str = '\n' # End of Message sign, should be same as in client.py
+    SERVER_FOLDER: Path = Path("server/_data/files/") # Universal Path object for multi OS path declaration
+    VERBOSITY: int = None      # Verbosity level set by console-app (kryzbu_server.py)
 
 
     @staticmethod
@@ -30,7 +31,6 @@ class Server:
 
     @staticmethod
     async def run():
-        print(os.getcwd())
         ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
         ssl_context.check_hostname = False
         ssl_context.load_cert_chain('server.cert', 'server.key')
@@ -52,8 +52,9 @@ class Server:
         data = await reader.readuntil(Server.EOM.encode())
         request = data.decode()[:-1]   # Decode and strip EOM symbol
 
-        addr = writer.get_extra_info('peername')
-        print(f"Incoming request: '{request}', from: {addr}")
+        if Server.VERBOSITY > 0:
+            addr = writer.get_extra_info('peername')
+            print(f"Incoming request: '{request}', from: {addr}")
 
         if 'UPLOAD' in request:
             # Request to upload file, structure: 'UPLOAD FILENAME USERNAME'
