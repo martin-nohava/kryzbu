@@ -195,6 +195,17 @@ class File_index():
 
 
     @staticmethod
+    def user_owns(user_name: str, file_name: str) -> bool:
+        """Check if user owns specified file."""
+
+        # file record stucture: ("file_name", "user_name", "upload_date", n_downloads)
+        record = Database.get_record(Database.Table.FILE_INDEX, file_name)
+
+        return record[1] == user_name
+
+
+
+    @staticmethod
     def user_files(user_name: str) -> list:
         """Return user's files. Look through whole file index and return only files available for specified user."""
 

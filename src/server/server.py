@@ -138,11 +138,11 @@ class Server:
     async def serve_file(file_name: str, user_name: str, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         """Send file to a client."""
 
-        if User_db.name_exists(user_name):
-            # User authenticated based on username
+        if User_db.name_exists(user_name):      # TODO: implement real authenticatin, now it checks only if name exists in db
+            # User is registered
             file_path = os.path.join(Server.SERVER_FOLDER, file_name)
 
-            if os.path.exists(file_path):
+            if os.path.exists(file_path) and File_index.user_owns(user_name, file_name):
                 # Inform client about authentication
                 writer.write(f"OK;Authenticated{Server.EOM}".encode())
                 await writer.drain()
