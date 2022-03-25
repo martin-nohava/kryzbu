@@ -203,7 +203,7 @@ class Server:
             # User authenticated based on username
             writer.write(f"OK;Authenticated{Server.EOM}".encode())
             # Send availabe files
-            writer.write(pickle.dumps(File_index.return_all()))
+            writer.write(pickle.dumps(File_index.user_files(user_name)))
         else:
             #User not_authenticated
             writer.write(f"ERROR;NotAuthenticatedError{Server.EOM}".encode())

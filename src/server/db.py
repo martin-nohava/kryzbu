@@ -1,5 +1,6 @@
 import hashlib
 from pathlib import Path
+from typing import Tuple
 from unicodedata import name
 import uuid
 from .loglib import Log
@@ -191,6 +192,21 @@ class File_index():
         """Print out all table."""
 
         Database.show_all(Database.Table.FILE_INDEX)
+
+
+    @staticmethod
+    def user_files(user_name: str) -> list:
+        """Return user's files. Look through whole file index and return only files available for specified user."""
+
+        user_files: list = []
+        records: Tuple = Database.return_all(Database.Table.FILE_INDEX)
+        
+        for record in records:
+            if record[1] == user_name:    # record structure: ("file_name", "user_name", "upload_date", n_downloads)
+                user_files.append(record)
+        
+        return user_files
+
 
     
     @staticmethod
