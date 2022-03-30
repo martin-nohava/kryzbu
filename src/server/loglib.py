@@ -2,10 +2,12 @@
 #
 # Source code available on: https://github.com/martin-nohava/kryzbu.
 
-from multiprocessing import Event
 from pathlib import Path
 import datetime
 from enum import Enum
+from .rsalib import Rsa
+from . import db
+from Crypto.Hash import HMAC, SHA256
 
 
 class Log:
@@ -108,7 +110,47 @@ class Log:
     @staticmethod
     # Function for appending lines to logfile
     def write(log: str) -> None:
-        file_path = Log.LOG_FOLDER / "kryzbu.log"
-
+        FILE_NAME = "kryzbu.log"
+        file_path = Log.LOG_FOLDER / FILE_NAME
+        
+        # Write new data to file
         with open(file_path, "a") as f:
                 f.write(log)
+        
+        # Create new HMAC instance
+        private_key = open(Rsa.get_priv_key_location()).read().encode()
+        hmac_instance = HMAC.new(private_key, digestmod=SHA256)
+        # Process entire file in chunks
+        with open(file_path, "rb") as f:
+            while True:
+                bytes_read = f.read(1024)
+                if not bytes_read:
+                    break
+                hmac_instance.update(bytes_read)
+            # Write new log HMAC to Hmac_index database
+            db.Hmac_index.add(FILE_NAME, hmac_instance.hexdigest())
+
+    def verify(file_name: str) -> None:
+        file_path = Log.LOG_FOLDER / file_name
+
+        # Create new HMAC instance
+        private_key = open(Rsa.get_priv_key_location()).read().encode()
+        hmac_instance = HMAC.new(private_key, digestmod=SHA256)
+
+        # Process entire file in chunks
+        with open(file_path, "rb") as f:
+            while True:
+                bytes_read = f.read(1024)
+                if not bytes_read:
+                    break
+                hmac_instance.update(bytes_read)
+            
+            # Check file integrity
+            try:
+                mac = db.Hmac_index.get_record(file_name)[1]
+                hmac_instance.hexverify(mac)
+                print(f"SUCCESS: The log file '{file_name}' integrity check succeded.")
+            except ValueError:
+                print(f"ERROR: The log file '{file_name}' integrity check failed!")
+
+

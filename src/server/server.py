@@ -8,7 +8,7 @@ import uuid
 from pathlib import Path
 import ssl
 from .loglib import Log
-from .db import File_index, User_db
+from .db import File_index, Hmac_index, User_db
 from .rsalib import Rsa
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP, AES
@@ -126,6 +126,9 @@ class Server:
         for path in PATHS:
             # Any missing parents of this path are created as needed, if folder already exists nothing happens
             Path(path).mkdir(parents=True, exist_ok=True)
+
+        #Initiate user database
+        Hmac_index.init()
 
         # Initiate file index
         File_index.init(Server.SERVER_FOLDER)
