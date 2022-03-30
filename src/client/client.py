@@ -83,51 +83,19 @@ class Client:
             if 'OK' in answer:
                 # Answer: 'OK;Authenticated'
 
-                # Prepare AES instance
-                pad = get_random_bytes(8)
-                aes_instance = AES.new(Client.load_aes_key(), AES.MODE_EAX)
-
                 # Prepare loading bar
                 file_size = os.path.getsize(file_path)
-                progress = tqdm.tqdm(range(len(pad) + file_size), f"Sending {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
+                progress = tqdm.tqdm(range(file_size), f"Sending {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
 
-                # Send signaling
-                # c_len, tag_len, pad_len, nonce_len
-                writer.write(f"{len(pad) + file_size};{16};{len(pad)};{len(aes_instance.nonce)}".encode() + Client.EOM.encode())
-                await writer.drain()
-
-                # Open file for reading
+                # Send file
                 with open(file_path, "rb") as f:
-                    i = 0
                     while True:
-                        # On first run
-                        if i == 0:
-                            # Ad pad as first 8 bytes of file
-                            bytes_read = f.read(1024)
-                            c = aes_instance.encrypt(pad + bytes_read)
-                            progress.update(len(pad) + len(bytes_read))
-                            i = 1
-                        # On any other run
-                        else:
-                            # Read chunk of data
-                            bytes_read = f.read(1024)
-                            # On last tun
-                            if not bytes_read:
-                                # Create MAC tag
-                                tag = aes_instance.digest()
-                                break
-                            # Encrypt chunk of data
-                            c = aes_instance.encrypt(bytes_read)
-                            progress.update(len(bytes_read))
-                            # Send data
-                        writer.write(c)
+                        bytes_read = f.read(1024)
+                        if not bytes_read:
+                            break
+                        progress.update(len(bytes_read))
+                        writer.write(bytes_read)
                         await writer.drain()
-
-                payload = (tag, pad, aes_instance.nonce)
-
-                # Send rest of the required data
-                writer.writelines(payload)
-                await writer.drain()
 
             elif 'NotAuthenticated' in answer:
                 # Answer: 'ERROR;NotAuthenticated'
@@ -152,7 +120,7 @@ class Client:
         reader, writer = await Client.open_connection()
 
         # Send DOWNLOAD request
-        writer.write(f"DOWNLOAD;{file_name};{Client.get_username()}{Client.EOM}".encode())
+        Client.send_request("DOWNLOAD", writer, file_name)
 
         # Receive aswer: 'OK;Authenticated' or 'ERROR;FileNotFoundError' or 'ERROR;NotAuthenticatedError'
         data = await reader.readuntil(Client.EOM.encode())
