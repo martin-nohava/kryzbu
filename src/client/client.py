@@ -42,6 +42,13 @@ class Client:
             exit(1)
 
     @staticmethod
+    def load_aes_key() -> bytes:
+        file_path = Client.USER_AES_KEY_BASE_PATH.joinpath('aes_' + Client.get_username() + '.key')
+        with open(file_path, "rb") as f:  
+            aes_key = f.read()
+            return aes_key
+
+    @staticmethod
     def send_request(type: str, writer: asyncio.StreamWriter, file_name: str ='empty') -> None:
         # Prepare request
         pad = get_random_bytes(8)
