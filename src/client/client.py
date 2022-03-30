@@ -215,24 +215,7 @@ class Client:
 
         if 'OK' in answer:
             # Answer: 'OK;Authenticated'
-            paylen = await reader.readuntil(Client.EOM.encode())
-            paylen = paylen.decode()[:-1]
-
-            # Recieve encrypted data
-            c_len, tag_len, pad_len, nonce_len = paylen.split(';')
-            c = await reader.read(int(c_len))
-            tag = await reader.read(int(tag_len))
-            pad = await reader.read(int(pad_len))
-            nonce = await reader.read(int(nonce_len))
-
-            # Decrypt answer from server
-            aes_instance = AES.new(Client.load_aes_key(), AES.MODE_EAX, nonce)
-            m = aes_instance.decrypt_and_verify(c, tag)
-
-            # Verify data are correctly decrypted
-            decryped_pad = m[0:8]
-            if decryped_pad == pad:
-                list = pickle.loads(m[8:])
+            list = pickle.loads(await reader.read())
                 
             if detailed:
                 # Detailed list

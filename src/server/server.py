@@ -11,7 +11,6 @@ from .loglib import Log
 from .db import File_index, User_db
 from .rsalib import Rsa
 from Crypto.PublicKey import RSA
-from Crypto.Random import get_random_bytes
 from Crypto.Cipher import PKCS1_OAEP, AES
 
 
@@ -155,13 +154,12 @@ class Server:
 
         Log.event(Log.Event.UPLOAD, 0, [file_name, user_name])
         File_index.add(file_name, user_name)
-        
+
 
     @staticmethod
     async def serve_file(file_name: str, user_name: str, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         """Send file to a client."""
 
-        # User authenticated based on username
         file_path = os.path.join(Server.SERVER_FOLDER, file_name)
 
         if os.path.exists(file_path):
@@ -191,41 +189,27 @@ class Server:
     async def remove_file(file_name: str, user_name: str, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         """Remove file."""
 
-        if User_db.name_exists(user_name):
-            # User authenticated based on username
-            file_path = os.path.join(Server.SERVER_FOLDER, file_name)
+        file_path = os.path.join(Server.SERVER_FOLDER, file_name)
 
-            if os.path.exists(file_path):
-                # Inform client about authentication
-                writer.write(f"OK;Authenticated{Server.EOM}".encode())
+        if os.path.exists(file_path):
+            # Delete file
+            os.remove(file_path)
+            writer.write(f"OK;FileDeleted;{file_name}{Server.EOM}".encode())
 
-                os.remove(file_path)
-                Log.event(Log.Event.DELETE, 0, [file_name, user_name])
-                File_index.delete(file_name)
-                writer.write(f"OK;FileDeleted;{file_name}{Server.EOM}".encode())
-            else:
-                # Requested file does NOT exist
-                writer.write(f"ERROR;FileNotFoundError{Server.EOM}".encode())
+            Log.event(Log.Event.DELETE, 0, [file_name, user_name])
+            File_index.delete(file_name)
         else:
-            #User not_authenticated
-            writer.write(f"ERROR;NotAuthenticatedError{Server.EOM}".encode())
+            # Requested file does NOT exist
+            writer.write(f"ERROR;FileNotFoundError{Server.EOM}".encode())
+        
 
     @staticmethod
     async def list_files(user_name:str, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         """Send available files for download."""
 
-        # Encrypt data before sending
-        pad = get_random_bytes(8)
-        m = pad + pickle.dumps(File_index.return_all())
-        aes_key = User_db.get_record(user_name)[2]
-        aes_instance = AES.new(aes_key, AES.MODE_EAX)
-        c, tag = aes_instance.encrypt_and_digest(m)
+        # Send file database data
+        writer.write(pickle.dumps(File_index.return_all()))
 
-        payload = (c, tag, pad, aes_instance.nonce)
-
-        # Send data
-        writer.write(f"{len(c)};{len(tag)};{len(pad)};{len(aes_instance.nonce)}".encode() + Server.EOM.encode())
-        writer.writelines(payload)
 
     @staticmethod
     async def send_pubkey(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
