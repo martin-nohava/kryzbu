@@ -177,7 +177,7 @@ class File_index():
                 loglib.Log.event(loglib.Log.Event.UPLOAD, 0, [file, os.path.basename(storage_folder)])
 
         # Check for indexed but not existing files
-        for file in File_index.return_all():
+        for file in File_index.user_files(os.path.basename(storage_folder)):
             if not os.path.exists(storage_folder / file[0]):    # file is a tuple, type not supported => need [0]
                 cur.execute("DELETE FROM file_index WHERE name=:name AND owner=:owner", {"name": file[0], "owner": os.path.basename(storage_folder)})
                 print(f"WARNING, File_index: File '{file[0]}' was indexed but did NOT exist, record was deleted from file index and DELETE was logged")

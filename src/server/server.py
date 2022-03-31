@@ -129,14 +129,10 @@ class Server:
         #Initiate user database
         Hmac_index.init()
 
-        print(File_index.return_all())
-
         # Initiate file index
         for user in User_db.return_all():
             # Check filesystem integrity for every user
             File_index.init(Server.SERVER_FOLDER / user[0])
-        
-        print(File_index.return_all())
 
         #Initiate user database
         User_db.init()
