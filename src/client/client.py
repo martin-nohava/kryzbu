@@ -182,10 +182,10 @@ class Client:
                 # delete_info: 'OK;FileDeleted'
                 print(f"File '{file_name}' successfully removed")
 
-        elif 'FileNotFoundError' in answer:
-            # Answer: 'ERROR;FileNotFoundError'
-            print(f"File '{file_name}' does NOT exist, CANNOT remove")
-            print("Check correct file name and try again")
+            if 'FileNotFoundError' in delete_info:
+                # Answer: 'ERROR;FileNotFoundError'
+                print(f"File '{file_name}' does NOT exist, CANNOT remove")
+                print("Check correct file name and try again")
 
         elif 'NotAuthenticatedError' in answer:
             # Answer: 'ERROR;NotAuthenticatedError'

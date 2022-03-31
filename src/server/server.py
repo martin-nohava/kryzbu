@@ -1,6 +1,5 @@
 # Server side
 
-from audioop import add
 import os
 import pickle
 import asyncio
@@ -130,9 +129,15 @@ class Server:
         #Initiate user database
         Hmac_index.init()
 
+        print(File_index.return_all())
+
         # Initiate file index
-        File_index.init(Server.SERVER_FOLDER)
+        for user in User_db.return_all():
+            # Check filesystem integrity for every user
+            File_index.init(Server.SERVER_FOLDER / user[0])
         
+        print(File_index.return_all())
+
         #Initiate user database
         User_db.init()
 
@@ -146,7 +151,7 @@ class Server:
     async def recieve_file(file_name: str, user_name: str, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         """Receive file from a client."""
             
-        file_path = Server.SERVER_FOLDER / file_name
+        file_path = Server.SERVER_FOLDER / user_name / file_name
 
         with open(file_path, "wb") as f:
                 while True:
@@ -163,7 +168,7 @@ class Server:
     async def serve_file(file_name: str, user_name: str, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         """Send file to a client."""
 
-        file_path = os.path.join(Server.SERVER_FOLDER, file_name)
+        file_path = Server.SERVER_FOLDER / user_name / file_name
 
         if os.path.exists(file_path):
             # Send file info
@@ -192,7 +197,7 @@ class Server:
     async def remove_file(file_name: str, user_name: str, reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
         """Remove file."""
 
-        file_path = os.path.join(Server.SERVER_FOLDER, file_name)
+        file_path = Server.SERVER_FOLDER / user_name / file_name
 
         if os.path.exists(file_path):
             # Delete file
@@ -211,7 +216,7 @@ class Server:
         """Send available files for download."""
 
         # Send file database data
-        writer.write(pickle.dumps(File_index.return_all()))
+        writer.write(pickle.dumps(File_index.user_files(user_name)))
 
 
     @staticmethod

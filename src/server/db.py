@@ -170,18 +170,18 @@ class File_index():
         
         # Check for not indexed files
         for file in os.listdir(storage_folder):
-            cur.execute("SELECT * FROM file_index WHERE name=:name", {"name": file})
+            cur.execute("SELECT * FROM file_index WHERE name=:name AND owner=:owner", {"name": file, "owner": os.path.basename(storage_folder)})
             if not cur.fetchone():
-                cur.execute("INSERT INTO file_index VALUES (?,?,?,?)", (file, 'Local_Admin', datetime.datetime.now().strftime("%m/%d/%Y"), 0))
+                cur.execute("INSERT INTO file_index VALUES (?,?,?,?)", (file, os.path.basename(storage_folder), datetime.datetime.now().strftime("%m/%d/%Y"), 0))
                 print(f"WARNING, File_index: File '{file}' was not indexed, new record was added to file index and UPLOAD was logged")
-                loglib.Log.event(loglib.Log.Event.UPLOAD, 0, [file, 'Local_Admin'])
+                loglib.Log.event(loglib.Log.Event.UPLOAD, 0, [file, os.path.basename(storage_folder)])
 
         # Check for indexed but not existing files
         for file in File_index.return_all():
             if not os.path.exists(storage_folder / file[0]):    # file is a tuple, type not supported => need [0]
-                cur.execute("DELETE FROM file_index WHERE name=:name", {"name": file[0]})
+                cur.execute("DELETE FROM file_index WHERE name=:name AND owner=:owner", {"name": file[0], "owner": os.path.basename(storage_folder)})
                 print(f"WARNING, File_index: File '{file[0]}' was indexed but did NOT exist, record was deleted from file index and DELETE was logged")
-                loglib.Log.event(loglib.Log.Event.DELETE, 0, [file[0], 'Local_Admin'])
+                loglib.Log.event(loglib.Log.Event.DELETE, 0, [file[0], os.path.basename(storage_folder)])
 
         con.commit()
         con.close()

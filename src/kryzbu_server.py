@@ -4,6 +4,8 @@
 # Path to this file can be added to PATH (Windows) to call it
 # as a standard command-line tool from everywhere.
 
+import os
+from pathlib import Path
 from server import server
 from server.db import User_db
 from server.loglib import Log
@@ -22,7 +24,10 @@ args = parser.parse_args()
 if args.register:
     # Add new record to user database
     if len(args.register) == 2:
+        # Add user to database
         User_db.add(args.register[0], args.register[1])
+        # Create new folder for user on server
+        Path(f'server/_data/files/{args.register[0]}').mkdir(parents=True, exist_ok=True)
     else:
         raise Exception(f"flag: --register needs 2 positional arguments, {len(args.register)} was given. \nUsage: kryzbu_server.py --register <username> <password>")
 elif args.remove:
