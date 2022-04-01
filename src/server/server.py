@@ -11,6 +11,7 @@ from .db import File_index, Hmac_index, User_db
 from .rsalib import Rsa
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP, AES
+import climage
 
 
 class Server:
@@ -28,7 +29,11 @@ class Server:
         """Start Kryzbu server."""
 
         Server.init()
-        asyncio.run(Server.run())
+        try:
+            asyncio.run(Server.run())
+        except KeyboardInterrupt:
+            print("\nShutting down server...")
+            print("Bye!")
 
 
     @staticmethod
@@ -301,3 +306,16 @@ class Server:
 
         else:
             print(f'WARNING: User {username} has failed to loged in from client.')
+
+    @staticmethod
+    def info():
+        image = climage.convert("../graphics/console.png", width=80)
+        print(image, end="")
+        image = climage.convert("../graphics/console-text.png", width=80)
+        print(image)
+        print ("{:█^80}".format(' SERVER INFORMATION: '))
+        print("\nVersion: 0.9 pre-release")
+        print("Contributors: martin-nohava, Bloc3k, Kaspis123, ikachuu")
+        print("More on: https://github.com/martin-nohava/kryzbu")
+        print("License: MIT\n")
+        print ("{:█^80}".format(' © 2022 – kryzbu '))

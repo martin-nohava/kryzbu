@@ -14,6 +14,7 @@ import getpass
 from Crypto.PublicKey import RSA
 from Crypto.Random import get_random_bytes
 from Crypto.Cipher import PKCS1_OAEP, AES
+import climage
 
 class Client:
     """Implementation of a Kryzbu client."""
@@ -496,3 +497,16 @@ class Client:
             os.remove(Client.SERVER_PUBLIC_KEY)
         except FileNotFoundError as e:
             print('WARN: Key allready flushed!')
+    
+    @staticmethod
+    def info():
+        image = climage.convert("../graphics/console.png", width=80)
+        print(image, end="")
+        image = climage.convert("../graphics/console-text.png", width=80)
+        print(image)
+        print ("{:█^80}".format(' CLIENT INFORMATION: '))
+        print("\nVersion: 0.9 pre-release")
+        print("Contributors: martin-nohava, Bloc3k, Kaspis123, ikachuu")
+        print("More on: https://github.com/martin-nohava/kryzbu")
+        print("License: MIT\n")
+        print ("{:█^80}".format(' © 2022 – kryzbu '))

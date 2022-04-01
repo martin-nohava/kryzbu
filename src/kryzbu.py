@@ -18,6 +18,7 @@ parser.add_argument("-l", "--list", help="list available files to download", act
 parser.add_argument("-s", "--switchusr", help="switch to different user account", action="store_true")
 parser.add_argument("-la", "--listall", help="list available files to download including additional info", action="store_true")
 parser.add_argument("-fk", "--flushkey", help="flush saved server public key", action="store_true")
+parser.add_argument("-V", "--version", action='count', default=0)
 group.add_argument("-u", "--upload", metavar="FILE", help="upload file to server", action="extend", nargs="+", type=str)
 group.add_argument("-d", "--download", metavar="FILE", help="download file from server", action="extend", nargs="+", type=str)
 group.add_argument("-r", "--remove", metavar="FILE", help="remove file from server", action="extend", nargs="+", type=str)
@@ -61,5 +62,8 @@ elif args.flushkey:
     client.Client.flush_key()
 elif args.setfolder:
     client.Client.set_download_folder(args.setfolder)
+elif args.version:
+    # Show program version and info
+    client.Client.info()
 else:
     parser.print_help()

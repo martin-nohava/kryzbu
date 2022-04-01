@@ -18,6 +18,7 @@ parser.add_argument("-l", "--list", help="list all users", action="store_true")
 parser.add_argument("--remove" , metavar="username", nargs='+', help="remove users from user database")
 parser.add_argument("--register", metavar="spec", nargs='+', help="register new user to server", action="extend")
 parser.add_argument("-v", "--verbose", action='count', default=0)
+parser.add_argument("-V", "--version", action='count', default=0)
 group.add_argument("-i", "--integrity", metavar="FILE", help="check log file integrity", action="extend", nargs="+", type=str)
 args = parser.parse_args()
 
@@ -41,6 +42,9 @@ elif args.integrity:
     # Check integrity of selected logfile
     for file_name in args.integrity:
         Log.verify(file_name)
+elif args.version:
+    # Show program version and info
+    server.Server.info()
 else:
     print('[*] Kryzbu server starting...')
     server.Server.VERBOSITY = args.verbose
