@@ -63,9 +63,11 @@ class Server:
         if 'GETKEY' in request:
             # Request to get server public key
             await Server.send_pubkey(reader, writer)
+            return
         elif 'LOGIN' in request:
             # Start login handshake with client
             await Server.autenticate(reader, writer)
+            return
         
         user_name, c_len, tag_len, pad_len, nonce_len = request.split(';')
         c = await reader.read(int(c_len))
