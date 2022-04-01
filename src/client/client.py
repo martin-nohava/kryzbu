@@ -132,21 +132,22 @@ class Client:
             file_info = data.decode()[:-1] # Decode and strip EOM symbol
             file_name, file_size = file_info.split(';')
 
-            progress = tqdm.tqdm(range(int(file_size)), f"Receiving {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
+            if 'FileNotFoundError' in file_info:
+                # Answer: 'ERROR;FileNotFoundError'
+                print(f"Requested file does NOT exist, CANNOT download")
+                print("Check if file name is correct and try again")
+            
+            else:
+                progress = tqdm.tqdm(range(int(file_size)), f"Receiving {file_name}", unit="B", unit_scale=True, unit_divisor=1024)
 
-            # Receive file
-            with open(str(os.path.join(Client.get_download_folder(), file_name)), "wb") as f:
-                while True:
-                    bytes_read = await reader.read(1024)
-                    if not bytes_read:
-                        break
-                    f.write(bytes_read)
-                    progress.update(len(bytes_read))
-
-        elif 'FileNotFoundError' in answer:
-            # Answer: 'ERROR;FileNotFoundError'
-            print(f"File '{file_name}' does NOT exist, CANNOT download")
-            print("Check correct file name and try again")
+                # Receive file
+                with open(str(os.path.join(Client.get_download_folder(), file_name)), "wb") as f:
+                    while True:
+                        bytes_read = await reader.read(1024)
+                        if not bytes_read:
+                            break
+                        f.write(bytes_read)
+                        progress.update(len(bytes_read))
 
         elif 'NotAuthenticatedError' in answer:
             # Answer: 'ERROR;NotAuthenticatedError'
