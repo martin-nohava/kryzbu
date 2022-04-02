@@ -309,7 +309,7 @@ class Server:
             print(f'WARNING: User {username} has failed to loged in from client.')
 
     @staticmethod
-    def info():
+    def version():
         image = climage.convert("../graphics/console.png", width=80)
         print(image, end="")
         image = climage.convert("../graphics/console-text.png", width=80)

@@ -64,6 +64,6 @@ elif args.setfolder:
     client.Client.set_download_folder(args.setfolder)
 elif args.version:
     # Show program version and info
-    client.Client.info()
+    client.Client.version()
 else:
     parser.print_help()

@@ -499,7 +499,7 @@ class Client:
             print('WARN: Key allready flushed!')
     
     @staticmethod
-    def info():
+    def version():
         image = climage.convert("../graphics/console.png", width=80)
         print(image, end="")
         image = climage.convert("../graphics/console-text.png", width=80)

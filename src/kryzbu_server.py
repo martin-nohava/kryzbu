@@ -44,7 +44,7 @@ elif args.integrity:
         Log.verify(file_name)
 elif args.version:
     # Show program version and info
-    server.Server.info()
+    server.Server.version()
 else:
     print('[*] Kryzbu server starting...')
     server.Server.VERBOSITY = args.verbose
