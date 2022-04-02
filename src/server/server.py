@@ -85,6 +85,7 @@ class Server:
             aes_key = User_db.get_record(user_name)[2]
         else:
             writer.write(f"ERROR;NotAuthenticatedError{Server.EOM}".encode())
+            return
         aes_instance = AES.new(aes_key, AES.MODE_EAX, nonce)
         m = aes_instance.decrypt_and_verify(c, tag)
 
