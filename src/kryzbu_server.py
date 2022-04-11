@@ -15,11 +15,27 @@ import argparse
 parser = argparse.ArgumentParser()
 group = parser.add_mutually_exclusive_group()
 parser.add_argument("-l", "--list", help="list all users", action="store_true")
-parser.add_argument("--remove" , metavar="username", nargs='+', help="remove users from user database")
-parser.add_argument("--register", metavar="spec", nargs='+', help="register new user to server", action="extend")
-parser.add_argument("-v", "--verbose", action='count', default=0)
-parser.add_argument("-V", "--version", action='count', default=0)
-group.add_argument("-i", "--integrity", metavar="FILE", help="check log file integrity", action="extend", nargs="+", type=str)
+parser.add_argument(
+    "--remove", metavar="username", nargs="+", help="remove users from user database"
+)
+parser.add_argument(
+    "--register",
+    metavar="spec",
+    nargs="+",
+    help="register new user to server",
+    action="extend",
+)
+parser.add_argument("-v", "--verbose", action="count", default=0)
+parser.add_argument("-V", "--version", action="count", default=0)
+group.add_argument(
+    "-i",
+    "--integrity",
+    metavar="FILE",
+    help="check log file integrity",
+    action="extend",
+    nargs="+",
+    type=str,
+)
 args = parser.parse_args()
 
 if args.register:
@@ -28,9 +44,13 @@ if args.register:
         # Add user to database
         User_db.add(args.register[0], args.register[1])
         # Create new folder for user on server
-        Path(f'server/_data/files/{args.register[0]}').mkdir(parents=True, exist_ok=True)
+        Path(f"server/_data/files/{args.register[0]}").mkdir(
+            parents=True, exist_ok=True
+        )
     else:
-        raise Exception(f"flag: --register needs 2 positional arguments, {len(args.register)} was given. \nUsage: kryzbu_server.py --register <username> <password>")
+        raise Exception(
+            f"flag: --register needs 2 positional arguments, {len(args.register)} was given. \nUsage: kryzbu_server.py --register <username> <password>"
+        )
 elif args.remove:
     # Remove user from useres database
     for user_name in args.remove:
@@ -46,7 +66,6 @@ elif args.version:
     # Show program version and info
     server.Server.version()
 else:
-    print('[*] Kryzbu server starting...')
+    print("[*] Kryzbu server starting...")
     server.Server.VERBOSITY = args.verbose
     server.Server.start()
-
