@@ -12,3 +12,6 @@ __pycache__
 
 # Ignore Server storage folder
 **/_data/
+
+# Ignore Doumentation build folder
+docs/build/

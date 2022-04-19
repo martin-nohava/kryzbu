@@ -5,6 +5,25 @@
   src="./graphics/kryzbu.png">
 </h1>
 
+# Install
+
+For Users:
+```bash
+pip install -r requirements.txt
+```
+
+For developers:
+```bash
+pip install -r requirements-dev.txt
+pre-commit install
+
+# Build the docs using Sphinx
+cd docs
+make html         # Linux
+.\make.bat html   # Windows
+```
+
+--------
 
 <h4 align="center">
 Kryptograficky zabezpečené úložiště  🔒
