@@ -15,13 +15,6 @@ server.db module
  
 V modulu server.db se nachází zdrojový kód sprostředkující serveru přístup k databázím uživatelů, souborů uložených na serveru a průběžných hashů logů pro zajištění integrity těchto logů. Formát databází se používá SQLite.
 
-server.db.File_index
-~~~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: server.db.File_index
-   :members:
-   :show-inheritance:
-
 server.db.User_db
 ~~~~~~~~~~~~~~~~~
 
@@ -29,8 +22,19 @@ server.db.User_db
    :members:
    :show-inheritance:
 
+server.db.File_index
+~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: server.db.File_index
+   :members:
+   :show-inheritance:
+
 server.db.Hmac_index
 ~~~~~~~~~~~~~~~~~~~~
+
+.. autoclass:: server.db.Hmac_index
+   :members:
+   :show-inheritance:
 
 server.db.Database
 ~~~~~~~~~~~~~~~~~~
