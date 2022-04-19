@@ -6,9 +6,12 @@
 Welcome to Kryzbu's documentation!
 ==================================
 
+Zde bude obecný popis aplikace, tj. rozdělení na server a klient část, stručný popis co která část umí a k čemu slouží.
+
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
    :caption: Content:
 
    client
    server
+   ddos
