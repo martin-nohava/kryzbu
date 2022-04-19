@@ -12,8 +12,7 @@ from Crypto.Random import get_random_bytes
 
 
 class User_db:
-    """Database of users registered in Kryzbu server.
-    Content of table: username, SHA256(password || salt), aes_key, salt"""
+    """Database of users registered in Kryzbu server. For every user database holds his Username, salted SHA-256 hash of his password, AES-128 secret and salt. This database is used throughout whole server-side code."""
 
     FOLDER = Path("server/_data")
     TABLE_NAME = "users"
@@ -21,7 +20,7 @@ class User_db:
 
     @staticmethod
     def init():
-        """Initialize user database while server starting."""
+        """Initialize user database while server is starting."""
 
         if not User_db.table_exists():
             con = sqlite3.connect(User_db.FOLDER / User_db.NAME)
@@ -35,7 +34,15 @@ class User_db:
 
     @staticmethod
     def add(user_name: str, password: str):
-        """Add new user to database."""
+        """
+        Add new user to user database with specified user name and password. Will create salted hash of specified password and generate AES-128 key for this user.
+
+        :param user_name: User name of new user.
+        :type user_name: str
+        :param password: Password for new user.
+        :type password: str
+
+        """
 
         salt = uuid.uuid4().hex
         pass_hash = str(hashlib.sha256(salt.encode() + password.encode()).hexdigest())
@@ -60,7 +67,13 @@ class User_db:
 
     @staticmethod
     def delete(user_name: str):
-        """Delete user."""
+        """
+        Delete user from user database with all of his secrets.
+
+        :param user_name: User name of user to be deleted.
+        :type user_name: str
+
+        """
 
         succ = Database.delete(Database.Table.USER_DB, user_name)
         if succ == 0:
@@ -75,31 +88,47 @@ class User_db:
 
     @staticmethod
     def get_record(user_name: str):
-        """Get info about specific username"""
+        """
+        Get info about specified user.
+
+        :param user_name: User name of requested user record.
+        :type user_name: str
+
+        """
 
         return Database.get_record(Database.Table.USER_DB, user_name)
 
     @staticmethod
     def return_all():
-        """Return all user table"""
+        """Return all user database with all of its records."""
 
         return Database.return_all(Database.Table.USER_DB)
 
     @staticmethod
     def show_all():
-        """Print out all table."""
+        """Print out all user database with all of its records."""
 
         Database.show_all(Database.Table.USER_DB)
 
     @staticmethod
     def table_exists() -> bool:
-        """Check if User already exists or not."""
+        """Check if user database already exists or not.
+
+        :return: Return whether user database exists or not.
+        :rtype: bool
+
+        """
 
         return Database.table_exists(Database.Table.USER_DB)
 
     @staticmethod
     def name_exists(user_name: str) -> bool:
-        """Check if there is the specified username in user database."""
+        """Check if username in registered in user database.
+
+        :return: Return whether name exists or not.
+        :rtype: bool
+
+        """
 
         return Database.name_exists(Database.Table.USER_DB, user_name)
 
