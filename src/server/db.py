@@ -12,7 +12,9 @@ from Crypto.Random import get_random_bytes
 
 
 class User_db:
-    """Database of users registered in Kryzbu server. For every user database holds his Username, salted SHA-256 hash of his password, AES-128 secret and salt. This database is used throughout whole server-side code."""
+    """Database of users registered in Kryzbu server. For every user database holds his Username,
+    salted SHA-256 hash of his password, AES-128 secret and salt. This database is used throughout
+    whole server-side code."""
 
     FOLDER = Path("server/_data")
     TABLE_NAME = "users"
@@ -35,7 +37,9 @@ class User_db:
     @staticmethod
     def add(user_name: str, password: str):
         """
-        Add new user to user database with specified user name and password. Will create salted hash of specified password and generate AES-128 key for this user.
+        Add new user to user database with specified user name and password. Will create salted
+        hash of specified password and generate AES-128 key for this user. And new :py:class:`REGISTER <server.loglib.Log.Event.REGISTER>` event
+        is logged.
 
         :param user_name: User name of new user.
         :type user_name: str
@@ -99,8 +103,12 @@ class User_db:
         return Database.get_record(Database.Table.USER_DB, user_name)
 
     @staticmethod
-    def return_all():
-        """Return all user database with all of its records."""
+    def return_all() -> list:
+        """Return all user database with all of its records.
+
+        :returns: All records in user database.
+        :rtype: List
+        """
 
         return Database.return_all(Database.Table.USER_DB)
 
@@ -134,8 +142,9 @@ class User_db:
 
 
 class File_index:
-    """Database for indexing files saved in Kryzbu server storage.
-    Content of table: name, owner, date of upload, number of downloads.
+    """
+    Database for indexing files saved in Kryzbu server storage. File index holds metadata about all files. Every file has its own record.
+    Every record holds informations about the **name** and **owner** of a file, **date** of upload and **number of downloads**.
     """
 
     FOLDER = Path("server/_data/")
@@ -144,7 +153,11 @@ class File_index:
 
     @staticmethod
     def init(storage_folder: Path):
-        """Check if file index already exists, create empty one if not."""
+        """
+        Initialize file index while server is starting (called in :py:meth:`server.init() <server.server.Server.init>`
+        with other inits functions). Check if file index already exists, create empty one if not.
+        Also go refresh file index and check if listed files actually exists and update file index respectively.
+        """
 
         if not File_index.table_exists():
             con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
@@ -156,12 +169,22 @@ class File_index:
             con.commit()
             con.close()
 
-        # Check for changes in files and update idex respectively
+        # Check for changes in files and update index respectively
         File_index.refresh(storage_folder)
 
     @staticmethod
     def add(file_name: str, user_name: str):
-        """Add new file index to database."""
+        """
+        Add new file record into the file index. Store file name and owner user name from parameters.
+        Date of upload set to current time and date and initiate number of downloads to 0. Called
+        when a new file has been uploaded :py:meth:`Server.recieve_file() <server.server.Server.recieve_file()>`.
+
+        :param file_name: File name of new file.
+        :type file_name: str
+        :param user_name: Owner of a file.
+        :type user_name: str
+
+        """
 
         if not File_index.file_exists(file_name):
             con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
@@ -180,7 +203,13 @@ class File_index:
 
     @staticmethod
     def download(file_name: str):
-        """Update download count for a file."""
+        """
+        Just update (increment) download count of a file. Called when downdload of a file is requested :py:meth:`Server.serve_file() <server.server.Server.serve_file()>`.
+
+        :param file_name: File name of requested file.
+        :type file_name: str
+
+        """
 
         con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
         cur = con.cursor()
@@ -197,13 +226,28 @@ class File_index:
 
     @staticmethod
     def delete(file_name: str):
-        """Remove file record."""
+        """
+        Remove file record from a file index with all of its data. Called when deletion of a file
+        is requested :py:meth:`Server.remove_file() <server.server.Server.remove_file()>`.
+
+        :param file_name: File name of deleted file.
+        :type file_name: str
+
+        """
 
         Database.delete(Database.Table.FILE_INDEX, file_name)
 
     @staticmethod
     def refresh(storage_folder: Path):
-        "Check for not indexed files and index them and check for indexed but not existing files and delete them."
+        """
+        Check server filesystem integrity. Check for not indexed files in server storage and index them.
+        Also check for indexed files but not existing in server storage and delete them. Called automatically
+        when file index is been initialized :py:meth:`File_index.init() <server.db.File_index.init()>`.
+
+        :param storage_folder: Path to server storage.
+        :type storage_folder: Path
+
+        """
 
         con = sqlite3.connect(File_index.FOLDER / File_index.NAME)
         cur = con.cursor()
@@ -254,13 +298,23 @@ class File_index:
 
     @staticmethod
     def show_all():
-        """Print out all table."""
+        """Print out whole file index with all of its records."""
 
         Database.show_all(Database.Table.FILE_INDEX)
 
     @staticmethod
     def user_owns(user_name: str, file_name: str) -> bool:
-        """Check if user owns specified file."""
+        """
+        Check if user owns specified file.
+
+        :param user_name: Owner of a file.
+        :type user_name: str
+        :param file_name: File to be checked.
+        :type file_name: str
+        :returns: Ownership of a file
+        :rtype: bool
+
+        """
 
         # file record stucture: ("file_name", "user_name", "upload_date", n_downloads)
         record = Database.get_record(Database.Table.FILE_INDEX, file_name)
@@ -269,7 +323,13 @@ class File_index:
 
     @staticmethod
     def user_files(user_name: str) -> list:
-        """Return user's files. Look through whole file index and return only files available for specified user."""
+        """
+        Return user's files. Look through whole file index and return all files owned by specified user.
+
+        :param user_name: Owner of files.
+        :type user_name: str
+
+        """
 
         user_files: list = []
         records: Tuple = Database.return_all(Database.Table.FILE_INDEX)
@@ -284,25 +344,47 @@ class File_index:
 
     @staticmethod
     def return_all() -> list:
-        """Return all data."""
+        """Return whole file index with all of its records.
+
+        :returns: All records in file index.
+        :rtype: List
+
+        """
 
         return Database.return_all(Database.Table.FILE_INDEX)
 
     @staticmethod
     def get_record(file_name: str):
-        """Get info about file."""
+        """Get stored information about specified file.
+
+        :param file_name: File name of requested file.
+        :type file_name: str
+
+        """
 
         return Database.get_record(Database.Table.FILE_INDEX, file_name)
 
     @staticmethod
     def table_exists() -> bool:
-        """Check if file_index already exists or not."""
+        """Check if file index already exists or not.
+
+        :returns: Return whether file index exists or not.
+        :rtype: bool
+
+        """
 
         return Database.table_exists(Database.Table.FILE_INDEX)
 
     @staticmethod
     def file_exists(file_name: str) -> bool:
-        """Check if file with specified name exists in file index."""
+        """Check if file with specified name exists in file index.
+
+        :param file_name: File name to check existance for.
+        :type file_name: str
+        :returns: Return whether file exists or not.
+        :rtype: bool
+
+        """
 
         return Database.name_exists(Database.Table.FILE_INDEX, file_name)
 
@@ -315,7 +397,7 @@ class Hmac_index:
     NAME = "hmac.db"
 
     @staticmethod
-    def init()->None:
+    def init() -> None:
         """
         Check if *hmac.db* database already exists, creates empty one if not.
 
@@ -400,7 +482,7 @@ class Hmac_index:
 
         :return: True or False
         :rtype: bool
-        
+
         """
 
         return Database.table_exists(Database.Table.HMAC_INDEX)
@@ -412,7 +494,7 @@ class Hmac_index:
 
         :return: True or False
         :rtype: bool
-        
+
         """
 
         return Database.name_exists(Database.Table.HMAC_INDEX, file_name)

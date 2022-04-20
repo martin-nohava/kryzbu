@@ -15,3 +15,7 @@ Zde bude obecný popis aplikace, tj. rozdělení na server a klient část, stru
    client
    server
    ddos
+
+.. note::
+   Omlouváme se za kombinování anglického a českého jazyka. Kód a přirozeně pak i dokumentace k němu byla psána v anglickém jazyce.
+   Slovní popis aplikace, jakožto povinná část školního projektu pak v jazyce českém. Za vzniklé nesrovnalosti se omlouváme

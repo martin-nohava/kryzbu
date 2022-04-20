@@ -36,18 +36,12 @@ server.db.Hmac_index
    :members:
    :show-inheritance:
 
-server.db.Database
-~~~~~~~~~~~~~~~~~~
-
-.. autoclass:: server.db.Database
-   :members:
-   :show-inheritance:
-
 server.loglib module
 --------------------
 
-.. automodule:: server.loglib
+.. autoclass:: server.loglib.Log
    :members:
+   :undoc-members:
    :show-inheritance:
 
 server.rsalib module
