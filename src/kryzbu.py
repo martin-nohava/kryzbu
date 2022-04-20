@@ -96,7 +96,7 @@ elif args.info:
     client.Client.info()
 elif args.switchusr:
     # Change user
-    client.Client.online_operation(False)
+    client.Client.online_operation(True)
     client.Client.change_user()
 elif args.flushkey:
     # Delete saved server key
