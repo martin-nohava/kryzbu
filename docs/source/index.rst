@@ -12,6 +12,7 @@ Zde bude obecný popis aplikace, tj. rozdělení na server a klient část, stru
    :maxdepth: 3
    :caption: Content:
 
+   gettingStarted
    client
    server
    ddos
