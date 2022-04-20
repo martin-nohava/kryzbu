@@ -308,15 +308,20 @@ class File_index:
 
 
 class Hmac_index:
-    """Database for storing HMAC values of files (logs)."""
+    """Database for storing HMAC values of files (logs). Requires pair of file name and HMAC hash."""
 
     FOLDER = Path("server/_data/")
     TABLE_NAME = "hmac_index"
     NAME = "hmac.db"
 
     @staticmethod
-    def init():
-        """Check if file index already exists, create empty one if not."""
+    def init()->None:
+        """
+        Check if *hmac.db* database already exists, creates empty one if not.
+
+        :rtype: None
+
+        """
 
         if not Hmac_index.table_exists():
             con = sqlite3.connect(Hmac_index.FOLDER / Hmac_index.NAME)
@@ -328,7 +333,16 @@ class Hmac_index:
 
     @staticmethod
     def add(file_name: str, hmac: str):
-        """Add new HMAC index to database."""
+        """
+        Adds new entry to the database.
+
+        :param file_name: Name of log file
+        :type file_name: str
+        :param hmac: Hex string of HMAC hash
+        :type hmac: str
+        :rtype: None
+
+        """
 
         if not Hmac_index.file_exists(file_name):
             con = sqlite3.connect(Hmac_index.FOLDER / Hmac_index.NAME)
@@ -344,7 +358,16 @@ class Hmac_index:
 
     @staticmethod
     def update(file_name: str, hmac: str):
-        """Update HMAC for a file."""
+        """
+        Only updates *hmac* value for an existing file entry
+
+        :param file_name: Name of log file
+        :type file_name: str
+        :param hmac: Hex string of HMAC hash
+        :type hmac: str
+        :rtype: None
+
+        """
 
         con = sqlite3.connect(Hmac_index.FOLDER / Hmac_index.NAME)
         cur = con.cursor()
@@ -358,19 +381,39 @@ class Hmac_index:
 
     @staticmethod
     def get_record(file_name: str):
-        """Get info about specific file"""
+        """
+        Returns specific database entry for a file
+
+        :param file_name: Name of log file
+        :type file_name: str
+        :return: Specific row of *hmac.db* coresponding to file name
+        :rtype: list
+
+        """
 
         return Database.get_record(Database.Table.HMAC_INDEX, file_name)
 
     @staticmethod
     def table_exists() -> bool:
-        """Check if hmac_index already exists or not."""
+        """
+        Check if *hmac.db* already exists or not.
+
+        :return: True or False
+        :rtype: bool
+        
+        """
 
         return Database.table_exists(Database.Table.HMAC_INDEX)
 
     @staticmethod
     def file_exists(file_name: str) -> bool:
-        """Check if file with specified name exists in HMAC index."""
+        """
+        Check if file with specified name exists in *hmac.db* index.
+
+        :return: True or False
+        :rtype: bool
+        
+        """
 
         return Database.name_exists(Database.Table.HMAC_INDEX, file_name)
 

@@ -4,13 +4,17 @@ from Crypto.PublicKey import RSA
 
 
 class Rsa:
+    """Class containing logic for RSA key pair generation, storing and manimulation on server."""
 
     KEY_SIZE = 2048
     KEY_PATH = Path("server/_data/keys/")
     KEY_FILE_NAMES = ("priv.pem", "publ.pem")
 
     @staticmethod
-    def init():
+    def init()->None:
+        """
+        Function for RSA key pair generation, priv.pem and publ.pem are automatically generated if they do not exist.
+        """
         # Check if keypair exists in filesystem
         if not os.path.exists(
             Rsa.KEY_PATH / Rsa.KEY_FILE_NAMES[0]
@@ -31,9 +35,21 @@ class Rsa:
             print("INFO: RSA key-pair found.")
 
     @staticmethod
-    def get_pub_key_location():
+    def get_pub_key_location()->Path:
+        """
+        Returns RSA public key
+
+        :rtype: Path
+
+        """
         return Rsa.KEY_PATH / Rsa.KEY_FILE_NAMES[1]
 
     @staticmethod
-    def get_priv_key_location():
+    def get_priv_key_location()->Path:
+        """
+        Returns RSA private key
+
+        :rtype: Path
+
+        """
         return Rsa.KEY_PATH / Rsa.KEY_FILE_NAMES[0]
