@@ -29,9 +29,16 @@ class Client:
 
     @staticmethod
     async def open_connection() -> Tuple:
-        """Open connection to the server.
+        """
+        Open SSL connection to the Kryzbu server and return Reader and Writer objects for managing communication.
+        Connection is `asyncio stream <https://docs.python.org/3/library/asyncio-stream.html>`_ with SSL context.
+        This function is called at the beggining of each request made to server. SSL now uses self-signed certificate
+        for localhost. If client and server are not at the same machine PKI has to be managed.
 
-        Returns 'reader' and 'writer' objects."""
+        :returns: Reader and Writer objects.
+        :rtype: Tuple: (reader, writer)
+
+        """
 
         try:
             ssl_context = ssl.create_default_context(
@@ -290,6 +297,16 @@ class Client:
 
     @staticmethod
     def init() -> None:
+        """
+        Initialize client. Check for correct folder tree and fix it respectively.
+
+        | *client/*
+        | └── *_data/*
+        |      ├── *config/*
+        |      └── *keys/*
+
+        """
+
         PATHS = ("client/_data/config/", "client/_data/keys/")
         for path in PATHS:
             # Any missing parents of this path are created as needed, if folder already exists nothing happens
@@ -458,7 +475,15 @@ class Client:
 
     @staticmethod
     def get_download_folder() -> str:
-        """Get location of download folder from User config file."""
+        """
+        Get location of download folder from User config file.
+        User can choose where to store downloaded files from server
+        in */_data/config/user.conf*. This function loads this information.
+
+        :returns: Download folder location
+        :rtype: str
+
+        """
 
         with open(Client.USER_CONF, "r") as f:
             for line in f.readlines():
@@ -472,12 +497,19 @@ class Client:
 
     @staticmethod
     def set_download_folder(folder_path: str):
-        """Set folder location for files to be downloaded from server."""
+        """
+        Set folder location for files to be downloaded from server.
+        This information is stored in */_data/config/user.conf* file.
+
+        :param folder_path: Path to new download folder.
+        :type folder_path: str
+
+        """
 
         # In order to re-write config file, we firt read all config file
         # and save it. Than we write same content back line by line except
         # line with DOWNLOAD_FOLER specification. Only that line we change
-        # to store new downdload foler location.
+        # to store new download foler location.
 
         config: str = None
 
@@ -504,6 +536,8 @@ class Client:
 
     @staticmethod
     def info():
+        """Print out information about user account and client preferences. All information stored in */_data/config/user.conf*."""
+
         print("User account and client preferences information:\n")
         # Check if user exists, create user
         Client.user_exists()
@@ -516,6 +550,15 @@ class Client:
 
     @staticmethod
     def get_username() -> str:
+        """
+        Get user name of current account. Current account and
+        preferences are stored in */_data/config/user.conf*.
+
+        :returns: User name of current account.
+        :rtype: str
+
+        """
+
         ex = "USERNAME=.+"
         f = open(Client.USER_CONF, "r")
         lines = f.readlines()
@@ -539,6 +582,8 @@ class Client:
 
     @staticmethod
     def version():
+        """Print out information about client application."""
+
         image = climage.convert("../graphics/console.png", width=80)
         print(image, end="")
         image = climage.convert("../graphics/console-text.png", width=80)
