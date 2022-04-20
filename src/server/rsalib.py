@@ -4,7 +4,15 @@ from Crypto.PublicKey import RSA
 
 
 class Rsa:
-    """Class containing logic for RSA key pair generation, storing and manimulation on server."""
+    """
+    | Class containing logic for RSA key pair generation, storing and manimulation on server.
+    |
+    | **Global variables in this class:**
+    | **KEY_SIZE** (*int*) – size of generated keys in bits
+    | **KEY_PATH** (*Path*) – location for storing keys
+    | **KEY_FILE_NAMES** (*tuple*) – filenames of keys
+    
+    """
 
     KEY_SIZE = 2048
     KEY_PATH = Path("server/_data/keys/")

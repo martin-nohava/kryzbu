@@ -11,13 +11,23 @@ from Crypto.Hash import HMAC, SHA256
 
 
 class Log:
-    """The Log class provides system log management and log file integrity."""
+    """
+    | The Log class provides system log management and log file integrity.
+    |
+    | **Global variables in this class:**
+    | **LOG_FOLDER** (*Path*) – path to log folder location
+
+    """
 
     LOG_FOLDER = Path("server/_data/logs/")
 
     # Posible events
     class Event(Enum):
-        """Class containing all defined events that can be logged."""
+        """
+        Class containing all defined events that can be logged.
+    
+        """
+
         UPLOAD = 1
         DOWNLOAD = 2
         DELETE = 3
