@@ -401,8 +401,6 @@ class Hmac_index:
         """
         Check if *hmac.db* database already exists, creates empty one if not.
 
-        :rtype: None
-
         """
 
         if not Hmac_index.table_exists():
@@ -422,7 +420,6 @@ class Hmac_index:
         :type file_name: str
         :param hmac: Hex string of HMAC hash
         :type hmac: str
-        :rtype: None
 
         """
 
@@ -447,8 +444,7 @@ class Hmac_index:
         :type file_name: str
         :param hmac: Hex string of HMAC hash
         :type hmac: str
-        :rtype: None
-
+        
         """
 
         con = sqlite3.connect(Hmac_index.FOLDER / Hmac_index.NAME)

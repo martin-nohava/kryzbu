@@ -15,7 +15,16 @@ import climage
 
 
 class Server:
-    """Implementation of a Kryzbu server (Cryptographically Secure Storage)."""
+    """
+    | Implementation of a Kryzbu server (Cryptographically Secure Storage).
+    |
+    | **Global variables in this class:**
+    | **IP** (*str*) – IPv4 address of the host system
+    | **PORT** (*int*) – server binds to this port on the host system
+    | **EOM** (*str*) – End of Message sign, should be same as in *client.py*, helps in byte stream signaling
+    | **SERVER_FOLDER** (*Path*) – defines where to store user files on server
+    | **VERBOSITY** (*int*) – verbosity level set by user
+    """
 
     IP: str = "127.0.0.1"
     PORT: int = 60606
@@ -27,7 +36,10 @@ class Server:
 
     @staticmethod
     def start():
-        """Start Kryzbu server."""
+        """
+        Starts Kryzbu server, calls initialization checks before it continues.
+
+        """
 
         Server.init()
         try:
@@ -38,6 +50,10 @@ class Server:
 
     @staticmethod
     async def run():
+        """
+        Creates server instance, SSL context and starts listening for connections on selected port and IP address. Handles establishing new secure connections with clients.
+
+        """
         ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
         ssl_context.check_hostname = False
         ssl_context.load_cert_chain("server.cert", "server.key")
@@ -56,7 +72,38 @@ class Server:
     async def handle_connection(
         reader: asyncio.StreamReader, writer: asyncio.StreamWriter
     ):
-        """Asynch funcion for handling clients requests."""
+        """
+
+        | Async function for handling client connections.
+        |
+        | **Accepts several types of requests:**
+        | For any clients:
+        | *GETKEY:* client requests server public key
+        | *LOGIN:* client (user) requests authentication
+        |
+        | For authenticated clients only:
+        | *UPLOAD:* client requests to upload a file
+        | *DOWNLOAD:* client requests to download a file
+        | *REMOVE:* client requests to delete a file
+        | *LIST_DIR:* client requests to list all files he owns
+
+        Authenticated clients own *Session ID* in form of symetric user unique AES key. This key is used for *request* encryption. 
+        If client requests any action from server, he encrypts this request using AES key and sends this cyphertext *c* and his username.
+
+        .. math::
+                c = E(aeskey_{username}, request)
+
+        Server then tries to decrypt the request from cyphertext *c*, using user specific key from *users.db*. On success performs the requested action.
+
+        .. math::
+                m = D(aeskey_{username}, c)
+
+        :param reader: reader instance
+        :type reader: asyncio.StreamReader
+        :param writer: writer instance
+        :type writer: asyncio.StreamWriter
+
+        """
 
         # Recieve encrypted request from client
         data = await reader.readuntil(Server.EOM.encode())
@@ -126,7 +173,15 @@ class Server:
 
     @staticmethod
     def init() -> None:
-        """Checks if required folder structure for server exists, any other initialization stuf should be here."""
+        """
+        Runs initialization checks before starting Kryzbu server instace.
+
+        | 1. Checks if required folder structure for server exists, if not creates new one.
+        | 2. Initializes *hmac.db* database.
+        | 3. Checks integrity of filesystem for every user, makes sure all files are either indexed or deleted.
+        | 4. Initializes *users.db* database.
+        | 5. Initializes RSA key-pair
+        """
 
         PATHS = ("server/_data/files/", "server/_data/logs/", "server/_data/keys/")
         for path in PATHS:
@@ -156,7 +211,19 @@ class Server:
         reader: asyncio.StreamReader,
         writer: asyncio.StreamWriter,
     ):
-        """Receive file from a client."""
+        """
+        Function receiving files from client, storing them on server filesystem and indexing.
+
+        :param file_name: Name of uploaded file
+        :type file_name: str
+        :param user_name: Name of owner
+        :type user_name: str
+        :param reader: reader instance
+        :type reader: asyncio.StreamReader
+        :param writer: writer instance
+        :type writer: asyncio.StreamWriter
+
+        """
 
         file_path = Server.SERVER_FOLDER / user_name / file_name
 
@@ -177,7 +244,19 @@ class Server:
         reader: asyncio.StreamReader,
         writer: asyncio.StreamWriter,
     ):
-        """Send file to a client."""
+        """
+        Function for sending files to client.
+
+        :param file_name: Name of requested file
+        :type file_name: str
+        :param user_name: Name of user making request
+        :type user_name: str
+        :param reader: reader instance
+        :type reader: asyncio.StreamReader
+        :param writer: writer instance
+        :type writer: asyncio.StreamWriter
+        
+        """
 
         file_path = Server.SERVER_FOLDER / user_name / file_name
 
@@ -209,7 +288,19 @@ class Server:
         reader: asyncio.StreamReader,
         writer: asyncio.StreamWriter,
     ):
-        """Remove file."""
+        """
+        Function for removing files from server filesystem.
+
+        :param file_name: Name of requested file
+        :type file_name: str
+        :param user_name: Name of user making request
+        :type user_name: str
+        :param reader: reader instance
+        :type reader: asyncio.StreamReader
+        :param writer: writer instance
+        :type writer: asyncio.StreamWriter
+        
+        """
 
         file_path = Server.SERVER_FOLDER / user_name / file_name
 
@@ -228,14 +319,32 @@ class Server:
     async def list_files(
         user_name: str, reader: asyncio.StreamReader, writer: asyncio.StreamWriter
     ):
-        """Send available files for download."""
+        """
+        Function for sending list of available files to a user.
+
+        :param user_name: Name of user making request
+        :type user_name: str
+        :param reader: reader instance
+        :type reader: asyncio.StreamReader
+        :param writer: writer instance
+        :type writer: asyncio.StreamWriter
+        
+        """
 
         # Send file database data
         writer.write(pickle.dumps(File_index.user_files(user_name)))
 
     @staticmethod
     async def send_pubkey(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
-        """Send public key to client."""
+        """
+        Function for sending server's RSA public key to client on request.
+
+        :param reader: reader instance
+        :type reader: asyncio.StreamReader
+        :param writer: writer instance
+        :type writer: asyncio.StreamWriter
+        
+        """
 
         # Inform client about authentication
         writer.write(f"OK;{Server.EOM}".encode())
@@ -252,7 +361,47 @@ class Server:
 
     @staticmethod
     async def autenticate(reader: asyncio.StreamReader, writer: asyncio.StreamWriter):
-        """Autenticate user via handshake."""
+        """
+        This function handles users authentication on *LOGIN* request from client via custom defined handshake using symetric and asymetric cryptography.
+
+        **Client–Server handshake:** (servers point of view)
+
+        1. Server sends 'OK' ready to the client
+        2. Awaits encryped response *c* from client
+
+            .. math::
+                c = E(pubkey_{server}, (username, nonce_{user}))
+
+        3. Server decrypts cyphertext *c* creating plaintext message *m*. From this message server obtains users username and nonce.
+
+            .. math::
+                m = D(privkey_{server}, c)
+
+        4. Server fetches from *user.db* users password in form of salted hash, using it as symetric key. (If user with this username wasn't registered authentization fails.)
+        5. Server sends cyphertext *c* and *salt*, containing server and user nonce, encrypted with users hashed password.
+
+            .. math::
+                c = E(h(password_{username} || salt), (nonce_{user}, nonce_{server}))
+
+        6. Awaits client response. Client by knowing plaintext *password* from user should be able to decrypt cyphertext *c* and obtain server nonce. Then encrypt it again with server's RSA public key and send it to server thus prove knowledge of the correct password.
+        7. Server receives cypher text *c* and recovers plaintext *m*. If plaintext contains same server nonce as has been sent in step no. 5 client has been sucessfully authenticated, otherwise access is denied.
+
+            .. math::
+                m = D(privkey_{server}, c)
+
+        8. To sucessfully authenticated clients AES symetric key is sent as *c*. This AES key is unique for every user and is stored in the *user.db* database. Acts as *Session ID* granting access to server functions limited to authenticated users. (*UPLOAD, DOWNLOAD, LIST_DIR...*)
+
+            .. math::
+                c = E(h(password_{username} || salt), aeskey_{username})
+
+        More details on acessing of server functions limited to authenticated users in handle_connection section.
+
+        :param reader: reader instance
+        :type reader: asyncio.StreamReader
+        :param writer: writer instance
+        :type writer: asyncio.StreamWriter
+        
+        """
 
         # Inform client that server is ready for handshake
         writer.write(f"OK;Ready{Server.EOM}".encode())
@@ -326,6 +475,7 @@ class Server:
 
     @staticmethod
     def version():
+        """Prints version information."""
         image = climage.convert("../graphics/console.png", width=80)
         print(image, end="")
         image = climage.convert("../graphics/console-text.png", width=80)

@@ -40,7 +40,6 @@ class Log:
         :type status: any
         :param payload: list of required information to log, is different for every Event type.
         :type payload: list[str]
-        :rtype: None
 
         .. attention::
            Each event requires different input data in the payload variable to be written to a file. This structure must be observed when passing data to the *write* function. **See below.**
@@ -253,7 +252,6 @@ class Log:
 
         :param log: Line of structured text to write to a file 
         :type log: str
-        :rtype: None
 
         """
         FILE_NAME = "kryzbu.log"
@@ -283,7 +281,6 @@ class Log:
 
         :param file_name: Name of log file
         :type file_name: str
-        :rtype: None
 
         """
         file_path = Log.LOG_FOLDER / file_name
