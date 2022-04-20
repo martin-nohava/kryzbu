@@ -1,8 +1,8 @@
 Začínáme
 ========
 
-Kryptograficky zabezpečené uložiště (Kryzbu) se skládá ze 2 částí a to serveru a klienta. Komunikace probíhá ve formátu server-klient. Tento 
-celek umožňuje klientům využívat vzdálené uložiště (cloud) pro ukládání svých souborů a data.
+Kryptograficky zabezpečené úložiště (Kryzbu) se skládá ze 2 částí a to serveru a klienta. Komunikace probíhá ve formátu server-klient. Tento 
+celek umožňuje klientům využívat vzdálené úložiště (cloud) pro ukládání svých souborů a data.
 
 Instalace
 ---------
@@ -29,13 +29,13 @@ Přístup k souborům je řízen podle uživatelských účtů. Každý uživate
 
 Takto můžeme vytvořit nový účet se jménem `John` a heslem `aaa`.
 
-S jiš vytvořeným uživatelským účtem můžeme server spustit.
+S již vytvořeným uživatelským účtem můžeme server spustit.
 
 ::
 
     python kryzbu_server.py
 
-V nové přikazové řádce se nyní pomocí dříve vytvořeného účtu přihlásíme do klientské aplikace.
+V nové příkazové řádce se nyní pomocí dříve vytvořeného účtu přihlásíme do klientské aplikace.
 
 ::
 
@@ -46,7 +46,7 @@ Budeme vyzváni k zadání uživatelského jména a hesla. Zadáme dříve vytvo
 .. note::
     Pokud přihlášení proběhlo úspěšně, v příkazové řádce by se měla objevit hlášky oznamující úspěšné přihlášení pomocí účtu `John` (*INFO: You are now logged in as John*).
 
-Nyní můžeme z klienta přistupovat k uložisti na serveru pomocí dostupných příkazů. Seznam aktuálně dostupných příkazů lze zjistit pomocí přepínače `\-\-help`.
+Nyní můžeme z klienta přistupovat k úložišti na serveru pomocí dostupných příkazů. Seznam aktuálně dostupných příkazů lze zjistit pomocí přepínače `\-\-help`.
 
 ::
 
@@ -95,7 +95,7 @@ Uživatel může nahrát soubory pomocí přepínače `\-\-upload` a uvedení je
     python kryzbu.py -u <cesta/k/souboru> ...
 
 .. note::
-    Pro lehkost uvádění souborů je možné chtělný soubor myší přetáhnout z prohlížeče souborů do příkazové řádky. Příkazová řádka si sama načte správnou cestu k souboru.
+    Pro lehkost uvádění souborů je možné soubor myší přetáhnout z prohlížeče souborů do příkazové řádky. Příkazová řádka si sama načte správnou cestu k souboru.
 
 Stažení souboru
 ~~~~~~~~~~~~~~~
@@ -109,19 +109,19 @@ Uživatel si může dříve nahrané soubory stáhnout pomocí přepínače `\-\
 Mazání souboru
 ~~~~~~~~~~~~~~
 
-Uživatel může své dříve nahrané soubory ze vzdaleného uložiště smazat pomocí přepínače `\-\-remove` a uvedením jednoho nebo více názvů souborů ke smazání.
+Uživatel může své dříve nahrané soubory ze vzdáleného úložiště smazat pomocí přepínače `\-\-remove` a uvedením jednoho nebo více názvů souborů ke smazání.
 
 ::
 
     python kryzbu.py -r <název_soubor> ...
 
-.. attention::
+.. warning::
     Při smazání prosím berte na vědomí, že soubory budou nenávratně smazány společně se všemi jejich metadaty.
 
 Nastavení složky pro ukládání stažených souborů
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Ze serveru stažené soubory jsou defaultně ukládány do lokálního systémového adresáže `Stažené soubory` na disk `C:`. Uživatel si může defaultní adresář změnit a to pomocí přepínače `\-\-setfolder` a uvedení cesty k novému adresáři.
+Ze serveru stažené soubory jsou defaultně ukládány do lokálního systémového adresáře `Stažené soubory` na disk `C:`. Uživatel si může defaultní adresář změnit a to pomocí přepínače `\-\-setfolder` a uvedení cesty k novému adresáři.
 
 ::
 
