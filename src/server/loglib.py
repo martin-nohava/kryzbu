@@ -11,11 +11,13 @@ from Crypto.Hash import HMAC, SHA256
 
 
 class Log:
+    """The Log class provides system log management and log file integrity."""
 
     LOG_FOLDER = Path("server/_data/logs/")
 
     # Posible events
     class Event(Enum):
+        """Class containing all defined events that can be logged."""
         UPLOAD = 1
         DOWNLOAD = 2
         DELETE = 3
@@ -29,7 +31,45 @@ class Log:
     # status – status, if success 0, else pass error message e here
     # payload – list of required information to log
     def event(type: Event, status, payload: list) -> None:
-        """Writes event to log file"""
+        """
+        Writes any event passed in the parameters to a log file.
+
+        :param type: an Enum from class Event defining type of event beeing logged
+        :type type: Event
+        :param status: if success 0, else pass an error message here
+        :type status: any
+        :param payload: list of required information to log, is different for every Event type.
+        :type payload: list[str]
+        :rtype: None
+
+        .. attention::
+           Each event requires different input data in the payload variable to be written to a file. This structure must be observed when passing data to the *write* function. **See below.**
+
+        | **Every event requires different data input:**
+        |
+        | *UPLOAD*: file was uploaded to the server
+        | **payload** [0] – filename, e.g. testfile.txt
+        | **payload** [1] – username, e.g. john_doe, everyone
+
+        | *DOWNLOAD*: file was downloaded from the server
+        | **payload** [0] – filename, e.g. testfile.txt
+        | **payload** [1] – username, e.g. john_doe, everyone
+
+        | *DELETE*: file was deleted from the server
+        | **payload** [0] – filename, e.g. testfile.txt
+        | **payload** [1] – username, e.g. john_doe, everyone
+
+        | *REGISTER*: user registered
+        | **payload** [0] – username, e.g. john_doe, everyone
+
+        | *UNREGISTER*: user un-registered (deleted)
+        | **payload** [0] – username, e.g. john_doe, everyone
+
+        | *ACCESS_DENIED*: Access to resources denied, Unauthorized user
+        | **payload** [0] – resource
+        | **payload** [1] - username requested for access
+        | **payload** [2] - src socket
+        """
 
         # Switch for finding correct event type,
         # every event requires different data input
@@ -208,6 +248,14 @@ class Log:
     @staticmethod
     # Function for appending lines to logfile
     def write(log: str) -> None:
+        """
+        Function for appending lines to a logfile. After each call new HMAC of updated log file is created and stored in Hmac_index database. Private server RSA key and SHA256 is used.
+
+        :param log: Line of structured text to write to a file 
+        :type log: str
+        :rtype: None
+
+        """
         FILE_NAME = "kryzbu.log"
         file_path = Log.LOG_FOLDER / FILE_NAME
 
@@ -228,7 +276,16 @@ class Log:
             # Write new log HMAC to Hmac_index database
             db.Hmac_index.add(FILE_NAME, hmac_instance.hexdigest())
 
+    @staticmethod
     def verify(file_name: str) -> None:
+        """
+        Function for verifying log file integrity. Private server RSA key and SHA256 is used. Prints result to the console.
+
+        :param file_name: Name of log file
+        :type file_name: str
+        :rtype: None
+
+        """
         file_path = Log.LOG_FOLDER / file_name
 
         # Create new HMAC instance
