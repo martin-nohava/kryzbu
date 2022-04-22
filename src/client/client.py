@@ -18,7 +18,17 @@ import climage
 
 
 class Client:
-    """Implementation of a Kryzbu client."""
+    """
+    | Implementation of a Kryzbu client (Cryptographically Secure Storage).
+    |
+    | **Global variables in this class:**
+    | **SERVER_IP** (*str*) – IPv4 address where server is hosted
+    | **SERVER_PORT** (*int*) – port where server is hosted
+    | **EOM** (*str*) – End of Message sign, should be same as in *server.py*, helps in byte stream signaling
+    | **USER_CONF** (*Path*) – defines where to store user specific configuration
+    | **SERVER_PUBLIC_KEY** (*Path*) – defines where to store server public key
+    | **USER_AES_KEY_BASE_PATH** (*Path*) – defines where to store user specific AES key (Session ID)
+    """
 
     SERVER_IP = "127.0.0.1"
     SERVER_PORT = 60606
@@ -58,6 +68,13 @@ class Client:
 
     @staticmethod
     def load_aes_key() -> bytes:
+        """
+        Function for loading user's AES key from file.
+
+        :returns: AES key in bytes
+        :rtype: bytes
+
+        """
         file_path = Client.USER_AES_KEY_BASE_PATH.joinpath(
             "aes_" + Client.get_username() + ".key"
         )
@@ -69,6 +86,13 @@ class Client:
     def send_request(
         type: str, writer: asyncio.StreamWriter, file_name: str = "empty"
     ) -> None:
+        """
+        A function that provides easy sending of requests to the server by entering the type and file name to which it applies.
+
+        :param type: Type of request. (UPLOAD, DOWNLOAD etc.)
+        :type type: str
+
+        """
         # Prepare request
         pad = get_random_bytes(8)
         m = pad + f"{type};{file_name}".encode()
@@ -87,7 +111,13 @@ class Client:
 
     @staticmethod
     async def upload(file_path: str):
-        """Upload file to the server."""
+        """
+        Uploads file to server. Requires only file path to file to be uploaded.
+
+        :param file_path: File to path asi String
+        :type file_path: str
+
+        """
 
         if os.path.exists(file_path):
 
@@ -144,7 +174,13 @@ class Client:
 
     @staticmethod
     async def download(file_name: str):
-        """Download file from a server."""
+        """
+        Downloads file from server. Requires only file name.
+
+        :param file_path: File name
+        :type file_path: str
+        
+        """
 
         reader, writer = await Client.open_connection()
 
@@ -201,7 +237,13 @@ class Client:
 
     @staticmethod
     async def remove(file_name: str):
-        """Remove file from a server."""
+        """
+        Removes file from server. File must be acessible to currently loged in user.
+
+        :param file_name: File name
+        :type file_name: str
+        
+        """
 
         reader, writer = await Client.open_connection()
 
@@ -241,7 +283,13 @@ class Client:
 
     @staticmethod
     async def list_files(detailed: bool):
-        """List stored files on server. True: detailed view, False: basic view"""
+        """
+        Prints list of files available to the loged in user. Detailed view can be triggered by bool setting.
+
+        :param detailed: Detailed view
+        :type detailed: bool
+
+        """
 
         # Open connection with server
         reader, writer = await Client.open_connection()
@@ -314,7 +362,14 @@ class Client:
 
     @staticmethod
     def online_operation(online) -> None:
-        """Checks user information and folder structure. Obtains server public key."""
+        """
+        Function that prepares client for online communication with server.
+        Checks user information and folder structure. Obtains server public key.
+
+        :param detailed: Requires operation to be online?
+        :type detailed: bool
+
+        """
 
         if online:
             # Get server's public key rsa.pub
@@ -325,6 +380,10 @@ class Client:
 
     @staticmethod
     async def get_server_publickey():
+        """
+        Requests public key from server and saves it to filesystem.
+
+        """
         if not os.path.exists(Client.SERVER_PUBLIC_KEY):
             print("INFO: No server key found, requesting new...")
 
@@ -357,6 +416,9 @@ class Client:
 
     @staticmethod
     def user_exists():
+        """
+        Checks if some user is currently loged in.
+        """
         required = ("USERNAME=.+", "KEY_PATH=.+")
         # Check if config file exists
         if os.path.exists(Client.USER_CONF):
@@ -383,6 +445,9 @@ class Client:
 
     @staticmethod
     async def login():
+        """
+        If no user is loged in, start interative console login.
+        """
         print("INFO: No user account found! Please login first.")
 
         print("Username:", end=" ")
@@ -570,11 +635,17 @@ class Client:
 
     @staticmethod
     def change_user():
+        """
+        Starts interatcive login for new user.
+        """
         # os.remove(Client.USER_CONF)
         asyncio.run(Client.login())
 
     @staticmethod
     def flush_key():
+        """
+        Function to delete downloaded server public key.
+        """
         try:
             os.remove(Client.SERVER_PUBLIC_KEY)
         except FileNotFoundError as e:
