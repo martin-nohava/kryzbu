@@ -1,7 +1,11 @@
 Server
 ======
 
-Zde bude slovní popis Serveru, co dokáže a jak to dělá.
+.. _Server:
+
+Server je python aplikace běžící na hostujícím zařízení naslouchající na přidělené IP adrese a PORTU. Realizuje vzdálené zabezpečené úložiště. 
+Vyřizuje příchozí dotazy od `klienta <client.html>`_. Zajišťuje také registraci uživatelů, jejich autentizaci a řízení jejich přístupu. Přijímá pouze spojení zabezpečené pomocí TLS.
+Server `loguje <server.html#server-loglib-module>`_ důležité probíhající události a ukládá je do souboru, kde je zajištěna jejich integrita.
 
 server.server module
 --------------------
