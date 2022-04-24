@@ -1,9 +1,10 @@
-<h1 align="center"> 
+<h4 align="center"> 
 <img
   width="600"
   alt="RIS logo"
   src="./graphics/kryzbu.png">
-</h1>
+</h4>
+
 --------
 
 <h4 align="center">
@@ -27,7 +28,7 @@ Kryptograficky zabezpečené úložiště  🔒
   src="https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg"></a>
 </p>
 
-#### Rychlý start 🚀
+### Rychlý start 🚀
 
 Kompletní návod na instalaci a obsluhu je součástí [dokumentace](https://martin-nohava.github.io/kryzbu/build/html/gettingStarted.html). 📖
 
