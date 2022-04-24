@@ -4,25 +4,6 @@
   alt="RIS logo"
   src="./graphics/kryzbu.png">
 </h1>
-
-# Install
-
-For Users:
-```bash
-pip install -r requirements.txt
-```
-
-For developers:
-```bash
-pip install -r requirements-dev.txt
-pre-commit install
-
-# Build the docs using Sphinx
-cd docs
-make html         # Linux
-.\make.bat html   # Windows
-```
-
 --------
 
 <h4 align="center">
@@ -33,11 +14,9 @@ Kryptograficky zabezpečené úložiště  🔒
 </p>
 <p align="center">
  <strong>
-   <a href="./docs/">Dokumentace</a>
+   <a href="https://martin-nohava.github.io/kryzbu/build/html/index.html">Dokumentace</a>
   •
-  <a href="./services">Služby</a>
-  •
-  <a href="./sources">Zdroje</a>
+  <a href="./src">Zdroje</a>
    •
   <a href="./graphics">Grafika</a>
  </strong>
@@ -48,9 +27,30 @@ Kryptograficky zabezpečené úložiště  🔒
   src="https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg"></a>
 </p>
 
-<p align="center">
-  <b>TODO</b>: Dokončit Readme.md
-</p>
+#### Rychlý start 🚀
+
+Kompletní návod na instalaci a obsluhu je součástí [dokumentace](https://martin-nohava.github.io/kryzbu/build/html/gettingStarted.html). 📖
+
+**Pro uživatele:**
+
+```bash
+# Instalace potřebných závislostí
+pip install -r requirements.txt
+```
+
+**Pro vývojáře:**
+
+```bash
+# Instalace potřebných závislostí
+pip install -r requirements-dev.txt
+pre-commit install
+
+# Build dokumentace pomocí nástroje Sphinx
+cd docs
+make html         # Linux
+.\make.bat html   # Windows
+```
+
 
 
 
