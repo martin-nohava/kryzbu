@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Server &mdash; Kryzbu  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Mitigace DDoS" href="ddos.html" />
+    <link rel="prev" title="Client" href="client.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> Kryzbu
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Obsah:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="uvod.html">Úvod</a></li>
+<li class="toctree-l1"><a class="reference internal" href="uvod.html#ciele-projektu">Ciele projektu</a></li>
+<li class="toctree-l1"><a class="reference internal" href="uvod.html#vyvojovy-diagram">Vývojový diagram</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gettingStarted.html">Začínáme</a></li>
+<li class="toctree-l1"><a class="reference internal" href="client.html">Client</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Server</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-server.server">server.server module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#server-db-module">server.db module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#server-db-user-db">server.db.User_db</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#server-db-file-index">server.db.File_index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#server-db-hmac-index">server.db.Hmac_index</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#server-loglib-module">server.loglib module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-server.rsalib">server.rsalib module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ddos.html">Mitigace DDoS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="zaver.html">Závěr</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Kryzbu</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Server</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/server.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="server">
+<h1>Server<a class="headerlink" href="#server" title="Permalink to this headline"></a></h1>
+<p id="id1">Server je python aplikace běžící na hostujícím zařízení naslouchající na přidělené IP adrese a PORTU. Realizuje vzdálené zabezpečené úložiště.
+Vyřizuje příchozí dotazy od <a class="reference external" href="client.html">klienta</a>. Zajišťuje také registraci uživatelů, jejich autentizaci a řízení jejich přístupu. Přijímá pouze spojení zabezpečené pomocí TLS.
+Server <a class="reference external" href="server.html#server-loglib-module">loguje</a> důležité probíhající události a ukládá je do souboru, kde je zajištěna jejich integrita.</p>
+<section id="module-server.server">
+<span id="server-server-module"></span><h2>server.server module<a class="headerlink" href="#module-server.server" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="server.server.Server">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.server.</span></span><span class="sig-name descname"><span class="pre">Server</span></span><a class="headerlink" href="#server.server.Server" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<div class="line-block">
+<div class="line">Implementation of a Kryzbu server (Cryptographically Secure Storage).</div>
+<div class="line"><br /></div>
+<div class="line"><strong>Global variables in this class:</strong></div>
+<div class="line"><strong>IP</strong> (<em>str</em>) – IPv4 address of the host system</div>
+<div class="line"><strong>PORT</strong> (<em>int</em>) – server binds to this port on the host system</div>
+<div class="line"><strong>EOM</strong> (<em>str</em>) – End of Message sign, should be same as in <em>client.py</em>, helps in byte stream signaling</div>
+<div class="line"><strong>SERVER_FOLDER</strong> (<em>Path</em>) – defines where to store user files on server</div>
+<div class="line"><strong>VERBOSITY</strong> (<em>int</em>) – verbosity level set by user</div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="server.server.Server.autenticate">
+<em class="property"><span class="pre">async</span><span class="w"> </span><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">autenticate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">asyncio.streams.StreamReader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">writer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">asyncio.streams.StreamWriter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#server.server.Server.autenticate" title="Permalink to this definition"></a></dt>
+<dd><p>This function handles users authentication on <em>LOGIN</em> request from client via custom defined handshake using symetric and asymetric cryptography.</p>
+<p><strong>Client–Server handshake:</strong> (servers point of view)</p>
+<ol class="arabic">
+<li><p>Server sends ‘OK’ ready to the client</p></li>
+<li><p>Awaits encryped response <em>c</em> from client</p>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[c = E(pubkey_{server}, (username, nonce_{user}))\]</div>
+</div></blockquote>
+</li>
+<li><p>Server decrypts cyphertext <em>c</em> creating plaintext message <em>m</em>. From this message server obtains users username and nonce.</p>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[m = D(privkey_{server}, c)\]</div>
+</div></blockquote>
+</li>
+<li><p>Server fetches from <em>user.db</em> users password in form of salted hash, using it as symetric key. (If user with this username wasn’t registered authentization fails.)</p></li>
+<li><p>Server sends cyphertext <em>c</em> and <em>salt</em>, containing server and user nonce, encrypted with users hashed password.</p>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[c = E(h(password_{username} || salt), (nonce_{user}, nonce_{server}))\]</div>
+</div></blockquote>
+</li>
+<li><p>Awaits client response. Client by knowing plaintext <em>password</em> from user should be able to decrypt cyphertext <em>c</em> and obtain server nonce. Then encrypt it again with server’s RSA public key and send it to server thus prove knowledge of the correct password.</p></li>
+<li><p>Server receives cypher text <em>c</em> and recovers plaintext <em>m</em>. If plaintext contains same server nonce as has been sent in step no. 5 client has been sucessfully authenticated, otherwise access is denied.</p>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[m = D(privkey_{server}, c)\]</div>
+</div></blockquote>
+</li>
+<li><p>To sucessfully authenticated clients AES symetric key is sent as <em>c</em>. This AES key is unique for every user and is stored in the <em>user.db</em> database. Acts as <em>Session ID</em> granting access to server functions limited to authenticated users. (<em>UPLOAD, DOWNLOAD, LIST_DIR…</em>)</p>
+<blockquote>
+<div><div class="math notranslate nohighlight">
+\[c = E(h(password_{username} || salt), aeskey_{username})\]</div>
+</div></blockquote>
+</li>
+</ol>
+<p>More details on acessing of server functions limited to authenticated users in handle_connection section.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reader</strong> (<em>asyncio.StreamReader</em>) – reader instance</p></li>
+<li><p><strong>writer</strong> (<em>asyncio.StreamWriter</em>) – writer instance</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.server.Server.handle_connection">
+<em class="property"><span class="pre">async</span><span class="w"> </span><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">handle_connection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">asyncio.streams.StreamReader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">writer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">asyncio.streams.StreamWriter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#server.server.Server.handle_connection" title="Permalink to this definition"></a></dt>
+<dd><div class="line-block">
+<div class="line">Async function for handling client connections.</div>
+<div class="line"><br /></div>
+<div class="line"><strong>Accepts several types of requests:</strong></div>
+<div class="line">For any clients:</div>
+<div class="line"><em>GETKEY:</em> client requests server public key</div>
+<div class="line"><em>LOGIN:</em> client (user) requests authentication</div>
+<div class="line"><br /></div>
+<div class="line">For authenticated clients only:</div>
+<div class="line"><em>UPLOAD:</em> client requests to upload a file</div>
+<div class="line"><em>DOWNLOAD:</em> client requests to download a file</div>
+<div class="line"><em>REMOVE:</em> client requests to delete a file</div>
+<div class="line"><em>LIST_DIR:</em> client requests to list all files he owns</div>
+</div>
+<p>Authenticated clients own <em>Session ID</em> in form of symetric user unique AES key. This key is used for <em>request</em> encryption. 
+If client requests any action from server, he encrypts this request using AES key and sends this cyphertext <em>c</em> and his username.</p>
+<div class="math notranslate nohighlight">
+\[c = E(aeskey_{username}, request)\]</div>
+<p>Server then tries to decrypt the request from cyphertext <em>c</em>, using user specific key from <em>users.db</em>. On success performs the requested action.</p>
+<div class="math notranslate nohighlight">
+\[m = D(aeskey_{username}, c)\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reader</strong> (<em>asyncio.StreamReader</em>) – reader instance</p></li>
+<li><p><strong>writer</strong> (<em>asyncio.StreamWriter</em>) – writer instance</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.server.Server.init">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">init</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#server.server.Server.init" title="Permalink to this definition"></a></dt>
+<dd><p>Runs initialization checks before starting Kryzbu server instace.</p>
+<div class="line-block">
+<div class="line">1. Checks if required folder structure for server exists, if not creates new one.</div>
+<div class="line">2. Initializes <em>hmac.db</em> database.</div>
+<div class="line">3. Checks integrity of filesystem for every user, makes sure all files are either indexed or deleted.</div>
+<div class="line">4. Initializes <em>users.db</em> database.</div>
+<div class="line">5. Initializes RSA key-pair</div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.server.Server.list_files">
+<em class="property"><span class="pre">async</span><span class="w"> </span><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">list_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">asyncio.streams.StreamReader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">writer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">asyncio.streams.StreamWriter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#server.server.Server.list_files" title="Permalink to this definition"></a></dt>
+<dd><p>Function for sending list of available files to a user.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>user_name</strong> (<em>str</em>) – Name of user making request</p></li>
+<li><p><strong>reader</strong> (<em>asyncio.StreamReader</em>) – reader instance</p></li>
+<li><p><strong>writer</strong> (<em>asyncio.StreamWriter</em>) – writer instance</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.server.Server.recieve_file">
+<em class="property"><span class="pre">async</span><span class="w"> </span><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">recieve_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">asyncio.streams.StreamReader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">writer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">asyncio.streams.StreamWriter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#server.server.Server.recieve_file" title="Permalink to this definition"></a></dt>
+<dd><p>Function receiving files from client, storing them on server filesystem and indexing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_name</strong> (<em>str</em>) – Name of uploaded file</p></li>
+<li><p><strong>user_name</strong> (<em>str</em>) – Name of owner</p></li>
+<li><p><strong>reader</strong> (<em>asyncio.StreamReader</em>) – reader instance</p></li>
+<li><p><strong>writer</strong> (<em>asyncio.StreamWriter</em>) – writer instance</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.server.Server.remove_file">
+<em class="property"><span class="pre">async</span><span class="w"> </span><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">remove_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">asyncio.streams.StreamReader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">writer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">asyncio.streams.StreamWriter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#server.server.Server.remove_file" title="Permalink to this definition"></a></dt>
+<dd><p>Function for removing files from server filesystem.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_name</strong> (<em>str</em>) – Name of requested file</p></li>
+<li><p><strong>user_name</strong> (<em>str</em>) – Name of user making request</p></li>
+<li><p><strong>reader</strong> (<em>asyncio.StreamReader</em>) – reader instance</p></li>
+<li><p><strong>writer</strong> (<em>asyncio.StreamWriter</em>) – writer instance</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.server.Server.run">
+<em class="property"><span class="pre">async</span><span class="w"> </span><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#server.server.Server.run" title="Permalink to this definition"></a></dt>
+<dd><p>Creates server instance, SSL context and starts listening for connections on selected port and IP address. Handles establishing new secure connections with clients.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.server.Server.send_pubkey">
+<em class="property"><span class="pre">async</span><span class="w"> </span><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">send_pubkey</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">reader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">asyncio.streams.StreamReader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">writer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">asyncio.streams.StreamWriter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#server.server.Server.send_pubkey" title="Permalink to this definition"></a></dt>
+<dd><p>Function for sending server’s RSA public key to client on request.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>reader</strong> (<em>asyncio.StreamReader</em>) – reader instance</p></li>
+<li><p><strong>writer</strong> (<em>asyncio.StreamWriter</em>) – writer instance</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.server.Server.serve_file">
+<em class="property"><span class="pre">async</span><span class="w"> </span><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">serve_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reader</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">asyncio.streams.StreamReader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">writer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">asyncio.streams.StreamWriter</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#server.server.Server.serve_file" title="Permalink to this definition"></a></dt>
+<dd><p>Function for sending files to client.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_name</strong> (<em>str</em>) – Name of requested file</p></li>
+<li><p><strong>user_name</strong> (<em>str</em>) – Name of user making request</p></li>
+<li><p><strong>reader</strong> (<em>asyncio.StreamReader</em>) – reader instance</p></li>
+<li><p><strong>writer</strong> (<em>asyncio.StreamWriter</em>) – writer instance</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.server.Server.start">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">start</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#server.server.Server.start" title="Permalink to this definition"></a></dt>
+<dd><p>Starts Kryzbu server, calls initialization checks before it continues.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.server.Server.version">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">version</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#server.server.Server.version" title="Permalink to this definition"></a></dt>
+<dd><p>Prints version information.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="server-db-module">
+<h2>server.db module<a class="headerlink" href="#server-db-module" title="Permalink to this headline"></a></h2>
+<p>V modulu server.db se nachází zdrojový kód sprostředkující serveru přístup k databázím uživatelů, souborů uložených na serveru a průběžných hashů logů pro zajištění integrity těchto logů. Formát databází se používá SQLite.</p>
+<section id="server-db-user-db">
+<h3>server.db.User_db<a class="headerlink" href="#server-db-user-db" title="Permalink to this headline"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="server.db.User_db">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.db.</span></span><span class="sig-name descname"><span class="pre">User_db</span></span><a class="headerlink" href="#server.db.User_db" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Database of users registered in Kryzbu server. For every user database holds his Username,
+salted SHA-256 hash of his password, AES-128 secret and salt. This database is used throughout
+whole server-side code.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="server.db.User_db.add">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">password</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#server.db.User_db.add" title="Permalink to this definition"></a></dt>
+<dd><p>Add new user to user database with specified user name and password. Will create salted
+hash of specified password and generate AES-128 key for this user. And new <a class="reference internal" href="#server.loglib.Log.Event.REGISTER" title="server.loglib.Log.Event.REGISTER"><code class="xref py py-class docutils literal notranslate"><span class="pre">REGISTER</span></code></a> event
+is logged.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>user_name</strong> (<em>str</em>) – User name of new user.</p></li>
+<li><p><strong>password</strong> (<em>str</em>) – Password for new user.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.db.User_db.delete">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#server.db.User_db.delete" title="Permalink to this definition"></a></dt>
+<dd><p>Delete user from user database with all of his secrets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>user_name</strong> (<em>str</em>) – User name of user to be deleted.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.db.User_db.get_record">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#server.db.User_db.get_record" title="Permalink to this definition"></a></dt>
+<dd><p>Get info about specified user.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>user_name</strong> (<em>str</em>) – User name of requested user record.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.db.User_db.init">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">init</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#server.db.User_db.init" title="Permalink to this definition"></a></dt>
+<dd><p>Initialize user database while server is starting.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.db.User_db.name_exists">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">name_exists</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#server.db.User_db.name_exists" title="Permalink to this definition"></a></dt>
+<dd><p>Check if username in registered in user database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Return whether name exists or not.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.db.User_db.return_all">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">return_all</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#server.db.User_db.return_all" title="Permalink to this definition"></a></dt>
+<dd><p>Return all user database with all of its records.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>All records in user database.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>List</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.db.User_db.show_all">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">show_all</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#server.db.User_db.show_all" title="Permalink to this definition"></a></dt>
+<dd><p>Print out all user database with all of its records.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.db.User_db.table_exists">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">table_exists</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#server.db.User_db.table_exists" title="Permalink to this definition"></a></dt>
+<dd><p>Check if user database already exists or not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Return whether user database exists or not.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="server-db-file-index">
+<h3>server.db.File_index<a class="headerlink" href="#server-db-file-index" title="Permalink to this headline"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="server.db.File_index">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.db.</span></span><span class="sig-name descname"><span class="pre">File_index</span></span><a class="headerlink" href="#server.db.File_index" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Database for indexing files saved in Kryzbu server storage. File index holds metadata about all files. Every file has its own record.
+Every record holds informations about the <strong>name</strong> and <strong>owner</strong> of a file, <strong>date</strong> of upload and <strong>number of downloads</strong>.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="server.db.File_index.add">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">user_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#server.db.File_index.add" title="Permalink to this definition"></a></dt>
+<dd><p>Add new file record into the file index. Store file name and owner user name from parameters.
+Date of upload set to current time and date and initiate number of downloads to 0. Called
+when a new file has been uploaded <a class="reference internal" href="#server.server.Server.recieve_file" title="server.server.Server.recieve_file"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Server.recieve_file()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_name</strong> (<em>str</em>) – File name of new file.</p></li>
+<li><p><strong>user_name</strong> (<em>str</em>) – Owner of a file.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.db.File_index.delete">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#server.db.File_index.delete" title="Permalink to this definition"></a></dt>
+<dd><p>Remove file record from a file index with all of its data. Called when deletion of a file
+is requested <a class="reference internal" href="#server.server.Server.remove_file" title="server.server.Server.remove_file"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Server.remove_file()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file_name</strong> (<em>str</em>) – File name of deleted file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.db.File_index.download">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">download</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#server.db.File_index.download" title="Permalink to this definition"></a></dt>
+<dd><p>Just update (increment) download count of a file. Called when downdload of a file is requested <a class="reference internal" href="#server.server.Server.serve_file" title="server.server.Server.serve_file"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Server.serve_file()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file_name</strong> (<em>str</em>) – File name of requested file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.db.File_index.file_exists">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">file_exists</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#server.db.File_index.file_exists" title="Permalink to this definition"></a></dt>
+<dd><p>Check if file with specified name exists in file index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file_name</strong> (<em>str</em>) – File name to check existance for.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Return whether file exists or not.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.db.File_index.get_record">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#server.db.File_index.get_record" title="Permalink to this definition"></a></dt>
+<dd><p>Get stored information about specified file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file_name</strong> (<em>str</em>) – File name of requested file.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.db.File_index.init">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">init</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">storage_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#server.db.File_index.init" title="Permalink to this definition"></a></dt>
+<dd><p>Initialize file index while server is starting (called in <a class="reference internal" href="#server.server.Server.init" title="server.server.Server.init"><code class="xref py py-meth docutils literal notranslate"><span class="pre">server.init()</span></code></a>
+with other inits functions). Check if file index already exists, create empty one if not.
+Also go refresh file index and check if listed files actually exists and update file index respectively.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.db.File_index.refresh">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">refresh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">storage_folder</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">pathlib.Path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#server.db.File_index.refresh" title="Permalink to this definition"></a></dt>
+<dd><p>Check server filesystem integrity. Check for not indexed files in server storage and index them.
+Also check for indexed files but not existing in server storage and delete them. Called automatically
+when file index is been initialized <a class="reference internal" href="#server.db.File_index.init" title="server.db.File_index.init"><code class="xref py py-meth docutils literal notranslate"><span class="pre">File_index.init()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>storage_folder</strong> (<em>Path</em>) – Path to server storage.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.db.File_index.return_all">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">return_all</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#server.db.File_index.return_all" title="Permalink to this definition"></a></dt>
+<dd><p>Return whole file index with all of its records.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>All records in file index.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>List</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.db.File_index.show_all">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">show_all</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#server.db.File_index.show_all" title="Permalink to this definition"></a></dt>
+<dd><p>Print out whole file index with all of its records.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.db.File_index.table_exists">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">table_exists</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#server.db.File_index.table_exists" title="Permalink to this definition"></a></dt>
+<dd><p>Check if file index already exists or not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Return whether file index exists or not.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.db.File_index.user_files">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">user_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">list</span></span></span><a class="headerlink" href="#server.db.File_index.user_files" title="Permalink to this definition"></a></dt>
+<dd><p>Return user’s files. Look through whole file index and return all files owned by specified user.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>user_name</strong> (<em>str</em>) – Owner of files.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.db.File_index.user_owns">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">user_owns</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">user_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#server.db.File_index.user_owns" title="Permalink to this definition"></a></dt>
+<dd><p>Check if user owns specified file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>user_name</strong> (<em>str</em>) – Owner of a file.</p></li>
+<li><p><strong>file_name</strong> (<em>str</em>) – File to be checked.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Ownership of a file</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="server-db-hmac-index">
+<h3>server.db.Hmac_index<a class="headerlink" href="#server-db-hmac-index" title="Permalink to this headline"></a></h3>
+<dl class="py class">
+<dt class="sig sig-object py" id="server.db.Hmac_index">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.db.</span></span><span class="sig-name descname"><span class="pre">Hmac_index</span></span><a class="headerlink" href="#server.db.Hmac_index" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Database for storing HMAC values of files (logs). Requires pair of file name and HMAC hash.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="server.db.Hmac_index.add">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">add</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hmac</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#server.db.Hmac_index.add" title="Permalink to this definition"></a></dt>
+<dd><p>Adds new entry to the database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_name</strong> (<em>str</em>) – Name of log file</p></li>
+<li><p><strong>hmac</strong> (<em>str</em>) – Hex string of HMAC hash</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.db.Hmac_index.file_exists">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">file_exists</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#server.db.Hmac_index.file_exists" title="Permalink to this definition"></a></dt>
+<dd><p>Check if file with specified name exists in <em>hmac.db</em> index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>True or False</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.db.Hmac_index.get_record">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_record</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#server.db.Hmac_index.get_record" title="Permalink to this definition"></a></dt>
+<dd><p>Returns specific database entry for a file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file_name</strong> (<em>str</em>) – Name of log file</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>Specific row of <em>hmac.db</em> coresponding to file name</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.db.Hmac_index.init">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">init</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#server.db.Hmac_index.init" title="Permalink to this definition"></a></dt>
+<dd><p>Check if <em>hmac.db</em> database already exists, creates empty one if not.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.db.Hmac_index.table_exists">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">table_exists</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">bool</span></span></span><a class="headerlink" href="#server.db.Hmac_index.table_exists" title="Permalink to this definition"></a></dt>
+<dd><p>Check if <em>hmac.db</em> already exists or not.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>True or False</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.db.Hmac_index.update">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hmac</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#server.db.Hmac_index.update" title="Permalink to this definition"></a></dt>
+<dd><p>Only updates <em>hmac</em> value for an existing file entry</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>file_name</strong> (<em>str</em>) – Name of log file</p></li>
+<li><p><strong>hmac</strong> (<em>str</em>) – Hex string of HMAC hash</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+<section id="server-loglib-module">
+<h2>server.loglib module<a class="headerlink" href="#server-loglib-module" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="server.loglib.Log">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.loglib.</span></span><span class="sig-name descname"><span class="pre">Log</span></span><a class="headerlink" href="#server.loglib.Log" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<div class="line-block">
+<div class="line">The Log class provides system log management and log file integrity.</div>
+<div class="line"><br /></div>
+<div class="line"><strong>Global variables in this class:</strong></div>
+<div class="line"><strong>LOG_FOLDER</strong> (<em>Path</em>) – path to log folder location</div>
+</div>
+<dl class="py class">
+<dt class="sig sig-object py" id="server.loglib.Log.Event">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">Event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#server.loglib.Log.Event" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>Class containing all defined events that can be logged.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.loglib.Log.Event.ACCESS_DENIED">
+<span class="sig-name descname"><span class="pre">ACCESS_DENIED</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">6</span></em><a class="headerlink" href="#server.loglib.Log.Event.ACCESS_DENIED" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.loglib.Log.Event.DELETE">
+<span class="sig-name descname"><span class="pre">DELETE</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3</span></em><a class="headerlink" href="#server.loglib.Log.Event.DELETE" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.loglib.Log.Event.DOWNLOAD">
+<span class="sig-name descname"><span class="pre">DOWNLOAD</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">2</span></em><a class="headerlink" href="#server.loglib.Log.Event.DOWNLOAD" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.loglib.Log.Event.REGISTER">
+<span class="sig-name descname"><span class="pre">REGISTER</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></em><a class="headerlink" href="#server.loglib.Log.Event.REGISTER" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.loglib.Log.Event.UNREGISTER">
+<span class="sig-name descname"><span class="pre">UNREGISTER</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">5</span></em><a class="headerlink" href="#server.loglib.Log.Event.UNREGISTER" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.loglib.Log.Event.UPLOAD">
+<span class="sig-name descname"><span class="pre">UPLOAD</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1</span></em><a class="headerlink" href="#server.loglib.Log.Event.UPLOAD" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="server.loglib.Log.LOG_FOLDER">
+<span class="sig-name descname"><span class="pre">LOG_FOLDER</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">PosixPath('server/_data/logs')</span></em><a class="headerlink" href="#server.loglib.Log.LOG_FOLDER" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.loglib.Log.event">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">event</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="#server.loglib.Log.Event" title="server.loglib.Log.Event"><span class="pre">server.loglib.Log.Event</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">status</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">payload</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">list</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#server.loglib.Log.event" title="Permalink to this definition"></a></dt>
+<dd><p>Writes any event passed in the parameters to a log file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>type</strong> (<a class="reference internal" href="#server.loglib.Log.Event" title="server.loglib.Log.Event"><em>Event</em></a>) – an Enum from class Event defining type of event beeing logged</p></li>
+<li><p><strong>status</strong> (<em>any</em>) – if success 0, else pass an error message here</p></li>
+<li><p><strong>payload</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – list of required information to log, is different for every Event type.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition attention">
+<p class="admonition-title">Attention</p>
+<p>Each event requires different input data in the payload variable to be written to a file. This structure must be observed when passing data to the <em>write</em> function. <strong>See below.</strong></p>
+</div>
+<div class="line-block">
+<div class="line"><strong>Every event requires different data input:</strong></div>
+<div class="line"><br /></div>
+<div class="line"><em>UPLOAD</em>: file was uploaded to the server</div>
+<div class="line"><strong>payload</strong> [0] – filename, e.g. testfile.txt</div>
+<div class="line"><strong>payload</strong> [1] – username, e.g. john_doe, everyone</div>
+</div>
+<div class="line-block">
+<div class="line"><em>DOWNLOAD</em>: file was downloaded from the server</div>
+<div class="line"><strong>payload</strong> [0] – filename, e.g. testfile.txt</div>
+<div class="line"><strong>payload</strong> [1] – username, e.g. john_doe, everyone</div>
+</div>
+<div class="line-block">
+<div class="line"><em>DELETE</em>: file was deleted from the server</div>
+<div class="line"><strong>payload</strong> [0] – filename, e.g. testfile.txt</div>
+<div class="line"><strong>payload</strong> [1] – username, e.g. john_doe, everyone</div>
+</div>
+<div class="line-block">
+<div class="line"><em>REGISTER</em>: user registered</div>
+<div class="line"><strong>payload</strong> [0] – username, e.g. john_doe, everyone</div>
+</div>
+<div class="line-block">
+<div class="line"><em>UNREGISTER</em>: user un-registered (deleted)</div>
+<div class="line"><strong>payload</strong> [0] – username, e.g. john_doe, everyone</div>
+</div>
+<div class="line-block">
+<div class="line"><em>ACCESS_DENIED</em>: Access to resources denied, Unauthorized user</div>
+<div class="line"><strong>payload</strong> [0] – resource</div>
+<div class="line"><strong>payload</strong> [1] - username requested for access</div>
+<div class="line"><strong>payload</strong> [2] - src socket</div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.loglib.Log.verify">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">verify</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#server.loglib.Log.verify" title="Permalink to this definition"></a></dt>
+<dd><p>Function for verifying log file integrity. Private server RSA key and SHA256 is used. Prints result to the console.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>file_name</strong> (<em>str</em>) – Name of log file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.loglib.Log.write">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">write</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#server.loglib.Log.write" title="Permalink to this definition"></a></dt>
+<dd><p>Function for appending lines to a logfile. After each call new HMAC of updated log file is created and stored in Hmac_index database. Private server RSA key and SHA256 is used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>log</strong> (<em>str</em>) – Line of structured text to write to a file</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-server.rsalib">
+<span id="server-rsalib-module"></span><h2>server.rsalib module<a class="headerlink" href="#module-server.rsalib" title="Permalink to this headline"></a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="server.rsalib.Rsa">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">server.rsalib.</span></span><span class="sig-name descname"><span class="pre">Rsa</span></span><a class="headerlink" href="#server.rsalib.Rsa" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<div class="line-block">
+<div class="line">Class containing logic for RSA key pair generation, storing and manimulation on server.</div>
+<div class="line"><br /></div>
+<div class="line"><strong>Global variables in this class:</strong></div>
+<div class="line"><strong>KEY_SIZE</strong> (<em>int</em>) – size of generated keys in bits</div>
+<div class="line"><strong>KEY_PATH</strong> (<em>Path</em>) – location for storing keys</div>
+<div class="line"><strong>KEY_FILE_NAMES</strong> (<em>tuple</em>) – filenames of keys</div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="server.rsalib.Rsa.get_priv_key_location">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_priv_key_location</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pathlib.Path</span></span></span><a class="headerlink" href="#server.rsalib.Rsa.get_priv_key_location" title="Permalink to this definition"></a></dt>
+<dd><p>Returns RSA private key</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.rsalib.Rsa.get_pub_key_location">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_pub_key_location</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">pathlib.Path</span></span></span><a class="headerlink" href="#server.rsalib.Rsa.get_pub_key_location" title="Permalink to this definition"></a></dt>
+<dd><p>Returns RSA public key</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>Path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="server.rsalib.Rsa.init">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">init</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">None</span></span></span><a class="headerlink" href="#server.rsalib.Rsa.init" title="Permalink to this definition"></a></dt>
+<dd><p>Function for RSA key pair generation, priv.pem and publ.pem are automatically generated if they do not exist.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="client.html" class="btn btn-neutral float-left" title="Client" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ddos.html" class="btn btn-neutral float-right" title="Mitigace DDoS" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, martin-nohava, Bloc3k, Kaspis123, ikachuu.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

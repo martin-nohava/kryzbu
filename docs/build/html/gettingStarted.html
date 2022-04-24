@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Začínáme &mdash; Kryzbu  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Client" href="client.html" />
+    <link rel="prev" title="Úvod" href="uvod.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> Kryzbu
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Obsah:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="uvod.html">Úvod</a></li>
+<li class="toctree-l1"><a class="reference internal" href="uvod.html#ciele-projektu">Ciele projektu</a></li>
+<li class="toctree-l1"><a class="reference internal" href="uvod.html#vyvojovy-diagram">Vývojový diagram</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Začínáme</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#instalace">Instalace</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pouziti">Použití</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#vypis-dostupnych-souboru">Výpis dostupných souborů</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nahrani-souboru">Nahrání souboru</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#stazeni-souboru">Stažení souboru</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#mazani-souboru">Mazání souboru</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#nastaveni-slozky-pro-ukladani-stazenych-souboru">Nastavení složky pro ukládání stažených souborů</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="client.html">Client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="server.html">Server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ddos.html">Mitigace DDoS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="zaver.html">Závěr</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Kryzbu</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Začínáme</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/gettingStarted.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="zaciname">
+<h1>Začínáme<a class="headerlink" href="#zaciname" title="Permalink to this headline"></a></h1>
+<p>Kryptograficky zabezpečené úložiště (Kryzbu) se skládá ze 2 částí a to serveru a klienta. Komunikace probíhá ve formátu server-klient. Tento
+celek umožňuje klientům využívat vzdálené úložiště (cloud) pro ukládání svých souborů a data.</p>
+<section id="instalace">
+<h2>Instalace<a class="headerlink" href="#instalace" title="Permalink to this headline"></a></h2>
+<p>Pro instalaci zadejte do příkazové řádku.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">git</span> <span class="n">clone</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="n">github</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">martin</span><span class="o">-</span><span class="n">nohava</span><span class="o">/</span><span class="n">kryzbu</span><span class="o">.</span><span class="n">git</span>
+<span class="n">cd</span> <span class="n">kryzbu</span><span class="o">/</span>
+<span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
+</pre></div>
+</div>
+<p>Nyní máme vše připraveno a může přejít k použití.</p>
+</section>
+<section id="pouziti">
+<h2>Použití<a class="headerlink" href="#pouziti" title="Permalink to this headline"></a></h2>
+<p>Přístup k souborům je řízen podle uživatelských účtů. Každý uživatel musí být nejprve zaregistrován na serveru.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">cd</span> <span class="n">src</span><span class="o">/</span>
+<span class="n">python</span> <span class="n">kryzbu_server</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">register</span> <span class="n">John</span> <span class="n">aaa</span>
+</pre></div>
+</div>
+<p>Takto můžeme vytvořit nový účet se jménem <cite>John</cite> a heslem <cite>aaa</cite>.</p>
+<p>S již vytvořeným uživatelským účtem můžeme server spustit.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">kryzbu_server</span><span class="o">.</span><span class="n">py</span>
+</pre></div>
+</div>
+<p>V nové příkazové řádce se nyní pomocí dříve vytvořeného účtu přihlásíme do klientské aplikace.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">kryzbu</span><span class="o">.</span><span class="n">py</span> <span class="o">-</span><span class="n">s</span>
+</pre></div>
+</div>
+<p>Budeme vyzváni k zadání uživatelského jména a hesla. Zadáme dříve vytvořené údaje, tedy jméno <cite>John</cite> a heslo <cite>aaa</cite>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Pokud přihlášení proběhlo úspěšně, v příkazové řádce by se měla objevit hlášky oznamující úspěšné přihlášení pomocí účtu <cite>John</cite> (<em>INFO: You are now logged in as John</em>).</p>
+</div>
+<p>Nyní můžeme z klienta přistupovat k úložišti na serveru pomocí dostupných příkazů. Seznam aktuálně dostupných příkazů lze zjistit pomocí přepínače <cite>--help</cite>.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">kryzbu</span><span class="o">.</span><span class="n">py</span> <span class="o">-</span><span class="n">h</span>
+</pre></div>
+</div>
+<p>Výstup příkazové řádky bude vypadat podobně:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">kryzbu</span><span class="o">.</span><span class="n">py</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">i</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">l</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">s</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">la</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">fk</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">V</span><span class="p">]</span> <span class="p">[</span><span class="o">-</span><span class="n">u</span> <span class="n">FILE</span> <span class="p">[</span><span class="n">FILE</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="o">-</span><span class="n">d</span> <span class="n">FILE</span> <span class="p">[</span><span class="n">FILE</span> <span class="o">...</span><span class="p">]</span> <span class="o">|</span> <span class="o">-</span><span class="n">r</span> <span class="n">FILE</span> <span class="p">[</span><span class="n">FILE</span> <span class="o">...</span><span class="p">]]</span>
+            <span class="p">[</span><span class="o">--</span><span class="n">setfolder</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">file</span><span class="p">]</span>
+
+<span class="n">options</span><span class="p">:</span>
+<span class="o">-</span><span class="n">h</span><span class="p">,</span> <span class="o">--</span><span class="n">help</span>            <span class="n">show</span> <span class="n">this</span> <span class="n">help</span> <span class="n">message</span> <span class="ow">and</span> <span class="n">exit</span>
+<span class="o">-</span><span class="n">i</span><span class="p">,</span> <span class="o">--</span><span class="n">info</span>            <span class="n">show</span> <span class="n">user</span> <span class="n">information</span> <span class="ow">and</span> <span class="n">client</span> <span class="n">settings</span>
+<span class="o">-</span><span class="n">l</span><span class="p">,</span> <span class="o">--</span><span class="nb">list</span>            <span class="nb">list</span> <span class="n">available</span> <span class="n">files</span> <span class="n">to</span> <span class="n">download</span>
+<span class="o">-</span><span class="n">s</span><span class="p">,</span> <span class="o">--</span><span class="n">switchusr</span>       <span class="n">switch</span> <span class="n">to</span> <span class="n">different</span> <span class="n">user</span> <span class="n">account</span>
+<span class="o">-</span><span class="n">la</span><span class="p">,</span> <span class="o">--</span><span class="n">listall</span>        <span class="nb">list</span> <span class="n">available</span> <span class="n">files</span> <span class="n">to</span> <span class="n">download</span> <span class="n">including</span> <span class="n">additional</span> <span class="n">info</span>
+<span class="o">-</span><span class="n">fk</span><span class="p">,</span> <span class="o">--</span><span class="n">flushkey</span>       <span class="n">flush</span> <span class="n">saved</span> <span class="n">server</span> <span class="n">public</span> <span class="n">key</span>
+<span class="o">-</span><span class="n">V</span><span class="p">,</span> <span class="o">--</span><span class="n">version</span>
+<span class="o">-</span><span class="n">u</span> <span class="n">FILE</span> <span class="p">[</span><span class="n">FILE</span> <span class="o">...</span><span class="p">],</span> <span class="o">--</span><span class="n">upload</span> <span class="n">FILE</span> <span class="p">[</span><span class="n">FILE</span> <span class="o">...</span><span class="p">]</span>
+                        <span class="n">upload</span> <span class="n">file</span> <span class="n">to</span> <span class="n">server</span>
+<span class="o">-</span><span class="n">d</span> <span class="n">FILE</span> <span class="p">[</span><span class="n">FILE</span> <span class="o">...</span><span class="p">],</span> <span class="o">--</span><span class="n">download</span> <span class="n">FILE</span> <span class="p">[</span><span class="n">FILE</span> <span class="o">...</span><span class="p">]</span>
+                        <span class="n">download</span> <span class="n">file</span> <span class="kn">from</span> <span class="nn">server</span>
+<span class="o">-</span><span class="n">r</span> <span class="n">FILE</span> <span class="p">[</span><span class="n">FILE</span> <span class="o">...</span><span class="p">],</span> <span class="o">--</span><span class="n">remove</span> <span class="n">FILE</span> <span class="p">[</span><span class="n">FILE</span> <span class="o">...</span><span class="p">]</span>
+                        <span class="n">remove</span> <span class="n">file</span> <span class="kn">from</span> <span class="nn">server</span>
+<span class="o">--</span><span class="n">setfolder</span> <span class="o">/</span><span class="n">path</span><span class="o">/</span><span class="n">to</span><span class="o">/</span><span class="n">file</span>
+                        <span class="nb">set</span> <span class="n">download</span> <span class="n">folder</span>
+</pre></div>
+</div>
+<section id="vypis-dostupnych-souboru">
+<h3>Výpis dostupných souborů<a class="headerlink" href="#vypis-dostupnych-souboru" title="Permalink to this headline"></a></h3>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">kryzbu</span><span class="o">.</span><span class="n">py</span> <span class="o">-</span><span class="n">l</span>     <span class="c1"># Krátký výpis</span>
+<span class="n">python</span> <span class="n">kryzbu</span><span class="o">.</span><span class="n">py</span> <span class="o">-</span><span class="n">la</span>    <span class="c1"># Plný výpis</span>
+</pre></div>
+</div>
+</section>
+<section id="nahrani-souboru">
+<h3>Nahrání souboru<a class="headerlink" href="#nahrani-souboru" title="Permalink to this headline"></a></h3>
+<p>Uživatel může nahrát soubory pomocí přepínače <cite>--upload</cite> a uvedení jednoho nebo více souboru.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">kryzbu</span><span class="o">.</span><span class="n">py</span> <span class="o">-</span><span class="n">u</span> <span class="o">&lt;</span><span class="n">cesta</span><span class="o">/</span><span class="n">k</span><span class="o">/</span><span class="n">souboru</span><span class="o">&gt;</span> <span class="o">...</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Pro lehkost uvádění souborů je možné soubor myší přetáhnout z prohlížeče souborů do příkazové řádky. Příkazová řádka si sama načte správnou cestu k souboru.</p>
+</div>
+</section>
+<section id="stazeni-souboru">
+<h3>Stažení souboru<a class="headerlink" href="#stazeni-souboru" title="Permalink to this headline"></a></h3>
+<p>Uživatel si může dříve nahrané soubory stáhnout pomocí přepínače <cite>--download</cite> a uvedení jednoho nebo více názvů souborů ke stažení.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">kryzbu</span><span class="o">.</span><span class="n">py</span> <span class="o">-</span><span class="n">d</span> <span class="o">&lt;</span><span class="n">název_soubor</span><span class="o">&gt;</span> <span class="o">...</span>
+</pre></div>
+</div>
+</section>
+<section id="mazani-souboru">
+<h3>Mazání souboru<a class="headerlink" href="#mazani-souboru" title="Permalink to this headline"></a></h3>
+<p>Uživatel může své dříve nahrané soubory ze vzdáleného úložiště smazat pomocí přepínače <cite>--remove</cite> a uvedením jednoho nebo více názvů souborů ke smazání.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">kryzbu</span><span class="o">.</span><span class="n">py</span> <span class="o">-</span><span class="n">r</span> <span class="o">&lt;</span><span class="n">název_soubor</span><span class="o">&gt;</span> <span class="o">...</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Při smazání prosím berte na vědomí, že soubory budou nenávratně smazány společně se všemi jejich metadaty.</p>
+</div>
+</section>
+<section id="nastaveni-slozky-pro-ukladani-stazenych-souboru">
+<h3>Nastavení složky pro ukládání stažených souborů<a class="headerlink" href="#nastaveni-slozky-pro-ukladani-stazenych-souboru" title="Permalink to this headline"></a></h3>
+<p>Ze serveru stažené soubory jsou defaultně ukládány do lokálního systémového adresáře <cite>Stažené soubory</cite> na disk <cite>C:</cite>. Uživatel si může defaultní adresář změnit a to pomocí přepínače <cite>--setfolder</cite> a uvedení cesty k novému adresáři.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">kryzbu</span><span class="o">.</span><span class="n">py</span> <span class="o">--</span><span class="n">setfolder</span> <span class="o">&lt;</span><span class="n">absolutní</span><span class="o">/</span><span class="n">cesta</span><span class="o">/</span><span class="n">k</span><span class="o">/</span><span class="n">adresáři</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="uvod.html" class="btn btn-neutral float-left" title="Úvod" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="client.html" class="btn btn-neutral float-right" title="Client" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, martin-nohava, Bloc3k, Kaspis123, ikachuu.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

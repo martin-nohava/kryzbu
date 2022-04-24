@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Úvod &mdash; Kryzbu  documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Začínáme" href="gettingStarted.html" />
+    <link rel="prev" title="Kryzbu dokumentace!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> Kryzbu
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Obsah:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Úvod</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#ciele-projektu">Ciele projektu</a></li>
+<li class="toctree-l1"><a class="reference internal" href="#vyvojovy-diagram">Vývojový diagram</a></li>
+<li class="toctree-l1"><a class="reference internal" href="gettingStarted.html">Začínáme</a></li>
+<li class="toctree-l1"><a class="reference internal" href="client.html">Client</a></li>
+<li class="toctree-l1"><a class="reference internal" href="server.html">Server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ddos.html">Mitigace DDoS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="zaver.html">Závěr</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Kryzbu</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Úvod</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/uvod.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="uvod">
+<h1>Úvod<a class="headerlink" href="#uvod" title="Permalink to this headline"></a></h1>
+<p>Zabezpečené ukladanie údajov súhrnne označuje manuálne alebo automatizované výpočtové procesy a technológie používané na zaistenie bezpečnosti a integrity uložených údajov.
+Táto ochrana môže byť aplikovaná ako ochrana fyzická napríklad fyzickou ochranou hardvéru, na ktorom sú dáta uložené, ako aj použitím zabezpečeného softvéru.
+Používanie vzdialených úložišť sa v poslednom desaťročí rozšírilo takmer na každého užívateľa. Tieto dáta, ktoré putujú od užívateľa až k úložisku,
+na ktorom sú následne uložené sú vystavené hrozbám. Táto technika má za potrebu zaistiť užívateľovi spoľahlivú službu a to zaistením jej integrity,
+dôveryhodnosti dát a dostupnosti. Pri nesprávnom overovaní vstupov, je útočník schopný zostaviť vstup vo forme, ktorá sa od zvyšku
+aplikácie neočakáva. Toto chovanie môže viesť k tomu, že sa v častiach systému objavia vstupy, ktoré vedia spôsobiť neprajné následky ako zmenený tok riadenia,
+svojvoľné riadenie zdroja alebo vykonávanie ľubovoľného kódu.</p>
+<p>Ako sa teda týmto hrozbám vyvarovať môže byť zhrnuté do pár hlavných bodov:</p>
+<ul class="simple">
+<li><p>Šifrovanie údajov</p></li>
+<li><p>Access control- mechanizmus kontroly prístupu na každom zariadení alebo softvéri na ukladanie údajov</p></li>
+<li><p>Ochrana dát pred poškodením- ochrana pred vírusmi, červami a inými úmyselnými hrozbami</p></li>
+<li><p>Fyzická bezpečnosť- bezpečnosť fyzického alebo akékoľvek obsadeného úložného zariadenia a jeho infraštruktúry</p></li>
+</ul>
+<p>Pri hľadaní slabín na bezpečnom úložisku je jednou z najdôležitejších skutočností si všimnúť a overiť
+všetky možné formy vstupov jednotlivých užívateľov. Ak sa prvotne zabráni užívateľom so zlým
+úmyslom pristupovať k útočným reťazcom, ľahko sa zmierni drvivá väčšina hrozieb. Ošetrenie
+jednotlivých slabín môže zmenšiť útočnú plochu a minimalizovať dopad úspešných útokov.</p>
+<p><strong>Dostupnosť</strong> - v kontexte bezpečnosti ukladania údajov dostupnosť znamená minimalizáciu rizika, že
+sa zdroje úložiska zničia alebo zneprístupnia buď úmyselne napríklad pomocou DDoS útoku alebo
+náhodne v dôsledku prírodnej katastrofy, výpadku napájania alebo iného mechanického zlyhania.
+Dôveryhodnosť- udržiavanie údajov v tajnosti zabezpečením toho, že k nim nemajú prístup
+neoprávnené osoby ani cez sieť, ani lokálne, je kľúčovým princípom zabezpečenia úložiska na
+predchádzanie narušeniu údajov.</p>
+<p><strong>Integrita</strong> - integrita údajov v kontexte bezpečnosti ukladania údajov znamená zabezpečenie, že s
+údajmi nemožno manipulovať ani ich zmeniť.</p>
+</section>
+<section id="ciele-projektu">
+<h1>Ciele projektu<a class="headerlink" href="#ciele-projektu" title="Permalink to this headline"></a></h1>
+<p>Pre aplikáciu symetrickej a asymetrickej kryptografie bude použitá kryptografická Python knižnica s
+názvom PyCryptodome. Táto knižnica umožňuje využiť radu rôznych funkcií ako režimy overeného
+šifrovania (GSM, CCM), kryptografiu nad eliptickými krivkami, hashovacie algoritmy (SHA-3, BLAKE2)
+alebo prúdové šifry. Okrem zabezpečenia dát sa do projektu implementuje aj nutná autentizácia
+užívateľa pred prístupom k samotným dátam. Tento užívateľ sa bude môcť autentizovať či už
+využitím symetrických alebo asymetrických algoritmov implementovaných v projekte.</p>
+</section>
+<section id="vyvojovy-diagram">
+<h1>Vývojový diagram<a class="headerlink" href="#vyvojovy-diagram" title="Permalink to this headline"></a></h1>
+<figure class="align-default">
+<a class="reference internal image-reference" href="_images/vyvojovy-diagram.svg"><img alt="_images/vyvojovy-diagram.svg" src="_images/vyvojovy-diagram.svg" width="100%" /></a>
+</figure>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Kryzbu dokumentace!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="gettingStarted.html" class="btn btn-neutral float-right" title="Začínáme" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2022, martin-nohava, Bloc3k, Kaspis123, ikachuu.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
